@@ -1,0 +1,15 @@
+{
+  "name": "template",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "monaco-editor": "^0.20.0",
+    "parcel-bundler": "^1.12.4"
+  },
+  "scripts": {
+    "start": "sh ./build_workers.sh && parcel index.html --open"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  }
+}
