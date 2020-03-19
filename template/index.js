@@ -1,7 +1,10 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.main.js";
+import { MonacoReplay } from "../lib/main";
 
 self.MonacoEnvironment = {
   getWorkerUrl: function(_, label) {
+    console.log(label, "111");
+
     if (label === "json") {
       return "./json.worker.js";
     }
@@ -24,4 +27,4 @@ let editor = monaco.editor.create(document.getElementById("container"), {
   theme: "vs-dark"
 });
 
-console.log(editor);
+window.rp = new MonacoReplay(editor);

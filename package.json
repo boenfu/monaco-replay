@@ -1,0 +1,29 @@
+{
+  "name": "monaco-replay",
+  "version": "0.1.0",
+  "description": "Replay your code actions",
+  "repository": "git@github.com:boenfu/monaco-replay.git",
+  "author": "boenfu <1997@boenfu.cn>",
+  "license": "MIT",
+  "private": false,
+  "main": "lib/main.js",
+  "module": "lib/main.js",
+  "types": "lib/main.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "dev": "cd ./template && yarn start",
+    "watch": "tsc --watch",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/long": "^4.0.1",
+    "@types/node": "^13.9.1",
+    "monaco-editor": "^0.20.0",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "protobufjs": "^6.8.9"
+  }
+}

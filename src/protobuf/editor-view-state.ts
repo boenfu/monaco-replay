@@ -1,23 +1,21 @@
-import { editor } from "monaco-editor";
 import { Message, Field } from "protobufjs/light";
-import { CursorStateMessage, ICursorState } from "./cursor-state";
-import { ViewStateMessage, IViewState } from "./view-state";
+import { CursorStateMessage } from "./cursor-state";
+import { ViewStateMessage } from "./view-state";
 
 type ContributionsState = { [id: string]: any };
 
-export type ICodeEditorViewState = editor.ICodeEditorViewState;
-
-export class CodeEditorViewStateMessage extends Message<ICodeEditorViewState>
-  implements ICodeEditorViewState {
+export class CodeEditorViewStateMessage
+  extends Message<Monaco.ICodeEditorViewState>
+  implements Monaco.ICodeEditorViewState {
   @Field.d(1, CursorStateMessage, "repeated")
-  cursorState: ICursorState[];
+  cursorState: Monaco.ICursorState[];
 
   @Field.d(2, ViewStateMessage)
-  viewState: IViewState;
+  viewState: Monaco.IViewState;
 
   contributionsState!: ContributionsState;
 
-  constructor(editorViewState: ICodeEditorViewState) {
+  constructor(editorViewState: Monaco.ICodeEditorViewState) {
     super(editorViewState);
 
     let { cursorState, viewState } = editorViewState ?? {};

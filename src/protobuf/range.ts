@@ -1,7 +1,7 @@
 import { Message, Field } from "protobufjs/light";
-import { IRange } from "monaco-editor";
 
-export class RangeMessage extends Message<IRange> implements IRange {
+export class RangeMessage extends Message<Monaco.IRange>
+  implements Monaco.IRange {
   @Field.d(1, "int32")
   startLineNumber: number;
 
@@ -14,7 +14,7 @@ export class RangeMessage extends Message<IRange> implements IRange {
   @Field.d(4, "int32")
   endColumn: number;
 
-  constructor(range: IRange) {
+  constructor(range: Monaco.IRange) {
     super(range);
 
     let { startLineNumber, startColumn, endLineNumber, endColumn } =
