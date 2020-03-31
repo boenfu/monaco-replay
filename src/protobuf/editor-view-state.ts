@@ -8,19 +8,14 @@ export class CodeEditorViewStateMessage
   extends Message<Monaco.ICodeEditorViewState>
   implements Monaco.ICodeEditorViewState {
   @Field.d(1, CursorStateMessage, "repeated")
-  cursorState: Monaco.ICursorState[];
+  cursorState!: Monaco.ICursorState[];
 
   @Field.d(2, ViewStateMessage)
-  viewState: Monaco.IViewState;
+  viewState!: Monaco.IViewState;
 
   contributionsState!: ContributionsState;
 
   constructor(editorViewState: Monaco.ICodeEditorViewState) {
     super(editorViewState);
-
-    let { cursorState, viewState } = editorViewState ?? {};
-
-    this.cursorState = cursorState;
-    this.viewState = viewState;
   }
 }

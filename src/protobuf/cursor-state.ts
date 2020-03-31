@@ -4,21 +4,15 @@ import { PositionMessage } from "./position";
 export class CursorStateMessage extends Message<Monaco.ICursorState>
   implements Monaco.ICursorState {
   @Field.d(1, "bool")
-  inSelectionMode: boolean;
+  inSelectionMode!: boolean;
 
   @Field.d(2, PositionMessage)
-  selectionStart: Monaco.IPosition;
+  selectionStart!: Monaco.IPosition;
 
   @Field.d(3, PositionMessage)
-  position: Monaco.IPosition;
+  position!: Monaco.IPosition;
 
   constructor(cursorState: Monaco.ICursorState) {
     super(cursorState);
-
-    let { inSelectionMode, selectionStart, position } = cursorState ?? {};
-
-    this.inSelectionMode = inSelectionMode;
-    this.selectionStart = selectionStart;
-    this.position = position;
   }
 }

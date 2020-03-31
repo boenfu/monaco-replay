@@ -3,8 +3,6 @@ import { MonacoReplay } from "../lib/main";
 
 self.MonacoEnvironment = {
   getWorkerUrl: function(_, label) {
-    console.log(label, "111");
-
     if (label === "json") {
       return "./json.worker.js";
     }

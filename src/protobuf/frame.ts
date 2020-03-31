@@ -1,61 +1,54 @@
 import { Message, Field } from "protobufjs/light";
 import { CodeEditorViewStateMessage } from "./editor-view-state";
 import { RangeMessage } from "./range";
-import { Frame } from "../models";
 import { Range } from "../core";
 
-interface IOperation {
+export interface IOperation {
   range: Monaco.IRange;
   text: string | null;
   forceMoveMarkers?: boolean;
 }
 
-class OperationMessage extends Message<IOperation> implements IOperation {
+export class OperationMessage extends Message<IOperation>
+  implements IOperation {
   @Field.d(1, RangeMessage)
-  range: Monaco.IRange;
+  range!: Monaco.IRange;
 
   @Field.d(2, "string", "optional")
-  text: string | null;
+  text!: string | null;
 
   @Field.d(3, "bool", "optional")
   forceMoveMarkers?: boolean | undefined;
 
   constructor(operation: IOperation) {
     super(operation);
-
-    let { range, text, forceMoveMarkers } = operation ?? {};
-
-    this.range = range;
-    this.text = text;
-    this.forceMoveMarkers = forceMoveMarkers;
   }
 }
 
-interface IFrameMessage {
+export interface IFrameMessage {
   operation: IOperation[];
   viewState: Monaco.ICodeEditorViewState;
+  timestamp?: number;
 }
 
 export class FrameMessage extends Message<IFrameMessage>
   implements IFrameMessage {
   @Field.d(1, OperationMessage, "repeated")
-  operation: IOperation[];
+  operation!: IOperation[];
 
   @Field.d(2, CodeEditorViewStateMessage)
-  viewState: Monaco.ICodeEditorViewState;
+  viewState!: Monaco.ICodeEditorViewState;
+
+  @Field.d(3, "int32")
+  timestamp!: number;
 
   constructor(frame: IFrameMessage) {
     super(frame);
-
-    let { operation, viewState } = frame ?? {};
-
-    this.operation = operation;
-    this.viewState = viewState;
   }
 
   toFrame(): Frame {
     let viewState = this.viewState;
-    let operation = this.operation.map(
+    let operation = this.operation?.map(
       ({
         range: { startColumn, startLineNumber, endColumn, endLineNumber },
         text,
@@ -72,9 +65,12 @@ export class FrameMessage extends Message<IFrameMessage>
       })
     );
 
+    let timestamp = this.timestamp;
+
     return {
       operation,
-      viewState
+      viewState,
+      timestamp
     };
   }
 }
