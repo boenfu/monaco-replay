@@ -1,7 +1,7 @@
 import "fast-text-encoding";
 
 import { Recorder } from "./recorder";
-import { FrameMessage } from "./protobuf";
+import { FrameMessage, ExcerptMessage } from "./protobuf";
 import { downloadRecord, readRecordFile } from "./utils";
 
 export interface MonacoReplayOption {
@@ -15,28 +15,41 @@ export class MonacoReplay {
   recorder: Recorder;
   playing = false;
   index = 0;
-  iv = "";
 
   constructor(private editor: Monaco.Editor) {
     this.recorder = new Recorder(editor);
   }
 
   start(): void {
-    this.iv = this.editor.getValue();
     this.recorder.start();
-    return;
   }
+
   stop(): void {
     this.recorder.stop();
-
-    setTimeout(() => {
-      downloadRecord(this.recorder.frames[0], "哈哈.more");
-      this.r();
-    }, 2000);
   }
 
-  async b() {
-    console.log(await readRecordFile());
+  saveToFile(name?: string): void {
+    let excerpt = this.recorder.getExcerpt();
+
+    if (!excerpt) {
+      return;
+    }
+
+    let bytes = ExcerptMessage.encode(excerpt).finish();
+
+    console.log(bytes);
+
+    downloadRecord(bytes, name);
+  }
+
+  async playFromFile(): Promise<void> {
+    let bytes = await readRecordFile();
+
+    console.log(bytes);
+
+    let excerpt = ExcerptMessage.decode(bytes);
+
+    console.log(excerpt);
   }
 
   r(): void {
@@ -44,20 +57,16 @@ export class MonacoReplay {
     this.index = 0;
     this.editor.updateOptions({ readOnly: true });
     this.editor.focus();
-    this.editor.setValue(this.iv);
+
+    let { value } = this.recorder.getExcerpt()!;
+    this.editor.setValue(value);
     this.replay();
   }
-  replay(): void {
-    let frames = this.recorder.frames;
 
-    console.log(
-      frames.length,
-      frames.reduce((s, f) => s + f.length, 0),
-      frames.reduce(
-        (s, f) => JSON.stringify(FrameMessage.decode(f).toFrame()).length + s,
-        0
-      )
-    );
+  replay(): void {
+    let { frames: fs } = this.recorder.getExcerpt()!;
+
+    let frames = fs.map(f => FrameMessage.encode(f).finish());
 
     if (this.index < frames.length) {
       requestAnimationFrame(() => {

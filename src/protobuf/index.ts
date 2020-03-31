@@ -4,3 +4,4 @@ export * from "./view-state";
 export * from "./position";
 export * from "./range";
 export * from "./frame";
+export * from "./excerpt";

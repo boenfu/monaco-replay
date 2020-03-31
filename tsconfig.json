@@ -15,7 +15,7 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
-    "lib": ["WebWorker.ImportScripts", "WebWorker", "DOM", "ESNext"]
+    "lib": ["DOM", "ESNext"]
   },
   "include": ["src"]
 }
