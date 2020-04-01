@@ -2,7 +2,7 @@ import "fast-text-encoding";
 
 import { Recorder } from "./recorder";
 import { FrameMessage, ExcerptMessage } from "./protobuf";
-import { downloadRecord, readRecordFile } from "./utils";
+import { saveRecordBytes, readRecordFile } from "./utils";
 
 export interface MonacoReplayOption {
   /**
@@ -37,15 +37,11 @@ export class MonacoReplay {
 
     let bytes = ExcerptMessage.encode(excerpt).finish();
 
-    console.log(bytes);
-
-    downloadRecord(bytes, name);
+    saveRecordBytes(bytes, name);
   }
 
   async playFromFile(): Promise<void> {
     let bytes = await readRecordFile();
-
-    console.log(bytes);
 
     let excerpt = ExcerptMessage.decode(bytes);
 

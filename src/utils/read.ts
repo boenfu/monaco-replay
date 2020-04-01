@@ -28,7 +28,13 @@ export async function readRecordFile(): Promise<Uint8Array> {
         let { readyState, result } = target;
 
         if (readyState === FileReader.DONE) {
-          resolve(new Uint8Array(result as ArrayBuffer));
+          try {
+            let bytes = new Uint8Array(result as ArrayBuffer);
+
+            resolve(bytes);
+          } catch (error) {
+            reject(error);
+          }
         }
       };
     };
