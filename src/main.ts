@@ -1,23 +1,21 @@
 import "fast-text-encoding";
 
 import { Recorder } from "./recorder";
-import { FrameMessage, ExcerptMessage } from "./protobuf";
-import { saveRecordBytes, readRecordFile } from "./utils";
+import { ExcerptMessage } from "./protobuf";
+import { saveRecordBytes } from "./utils";
+import { Player } from "./player";
 
 export interface MonacoReplayOption {
-  /**
-   * default `15`
-   */
   fps: number;
 }
 
 export class MonacoReplay {
   recorder: Recorder;
-  playing = false;
-  index = 0;
+  player: Player;
 
   constructor(private editor: Monaco.Editor) {
     this.recorder = new Recorder(editor);
+    this.player = new Player(editor);
   }
 
   start(): void {
@@ -38,50 +36,5 @@ export class MonacoReplay {
     let bytes = ExcerptMessage.encode(excerpt).finish();
 
     saveRecordBytes(bytes, name);
-  }
-
-  async playFromFile(): Promise<void> {
-    let bytes = await readRecordFile();
-
-    let excerpt = ExcerptMessage.decode(bytes);
-
-    console.log(excerpt);
-  }
-
-  r(): void {
-    this.playing = true;
-    this.index = 0;
-    this.editor.updateOptions({ readOnly: true });
-    this.editor.focus();
-
-    let { value } = this.recorder.getExcerpt()!;
-    this.editor.setValue(value);
-    this.replay();
-  }
-
-  replay(): void {
-    let { frames: fs } = this.recorder.getExcerpt()!;
-
-    let frames = fs.map(f => FrameMessage.encode(f).finish());
-
-    if (this.index < frames.length) {
-      requestAnimationFrame(() => {
-        let { operation, viewState } = FrameMessage.decode(
-          frames[this.index]
-        ).toFrame();
-
-        if (operation.length) {
-          Array.from(operation).forEach(i =>
-            this.editor.getModel()!.pushEditOperations([], [i], () => [])
-          );
-        }
-
-        this.editor.restoreViewState(viewState);
-        this.index += 1;
-        this.replay.call(this);
-      });
-    } else {
-      this.playing = false;
-    }
   }
 }

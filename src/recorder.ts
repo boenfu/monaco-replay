@@ -54,8 +54,6 @@ export class Recorder implements IRecorder {
     if (this.lastRequestAnimationFrameId) {
       cancelAnimationFrame(this.lastRequestAnimationFrameId);
     }
-
-    console.log(this.currentExcerpt);
   }
 
   getExcerpt(): IExcerptMessage | undefined {
