@@ -1,40 +1,63 @@
-import { iconComponent } from "./icon";
+import { mergeElementStyle } from "./utils";
+import { getIcon } from "./icon";
+import { Progress, getSpeedBlock, FileButton, Timer } from "./blocks";
+import { Player } from "../player";
+import { PRIMARY_COLOR } from "./theme";
 
-interface PlayerEvent {
-  onPlay(): void;
-  onPause(): void;
-  onCurrentTimeChange(second: number): void;
-  onSpeedXChange(speed: number): void;
-  onChooseFile(): void;
-}
+export class PlayerController {
+  dom!: HTMLElement;
 
-export function initializeController({}: Partial<PlayerEvent>): HTMLElement {
-  let div = document.createElement("div");
+  private timer = new Timer();
+  private fileButton = new FileButton(this.player);
+  private progress = new Progress(this.player);
 
-  let start = document.createElement("button");
+  constructor(private player: Player) {
+    this.initialize();
 
-  start.textContent = " !";
-  // start.addEventListener("click", this.playFromFile);
+    requestAnimationFrame(this.render);
+  }
 
-  div.appendChild(start);
+  private render = (): void => {
+    let player = this.player;
 
-  let style: Partial<CSSStyleDeclaration> = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "absolute",
-    left: "10%",
-    right: "10%",
-    bottom: "10px",
-    backgroundColor: "#fff",
-    height: "80px",
-    borderTopLeftRadius: "12px",
-    borderTopRightRadius: "12px"
+    this.timer.render(player.currentTime, player.duration);
+    this.progress.render(player.progress);
+
+    requestAnimationFrame(this.render);
   };
 
-  Object.assign(div.style, style);
+  private initialize(): void {
+    let container = document.createElement("div");
 
-  div.appendChild(iconComponent());
+    mergeElementStyle(container, {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      position: "absolute",
+      left: "8%",
+      right: "8%",
+      bottom: "8px",
+      padding: "0 24px",
+      backgroundColor: PRIMARY_COLOR,
+      height: "50px",
+      borderTopLeftRadius: "12px",
+      borderTopRightRadius: "12px",
+      boxShadow: "0 -3px 8px 0 hsla(0, 0%, 0%, 0.06)",
+      color: "#FFF",
+      fontSize: "14px",
+      userSelect: "none"
+    });
 
-  return div;
+    let start = getIcon();
+
+    container.append(
+      start,
+      this.progress.dom,
+      this.timer.dom,
+      getSpeedBlock(),
+      this.fileButton.dom
+    );
+
+    this.dom = container;
+  }
 }

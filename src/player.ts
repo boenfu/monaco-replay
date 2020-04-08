@@ -5,7 +5,7 @@ import {
   IFrameMessage,
   IExcerptMessage
 } from "./protobuf";
-import { initializeController } from "./controller";
+import { PlayerController } from "./controller";
 
 export type IPlayerSpeedX = 0.1 | 1.0 | 1.25 | 1.5 | 2.0;
 
@@ -13,12 +13,19 @@ export interface IPlayer {
   /**
    * 属性返回当前音频/视频的长度，以秒计。
    */
-  duration: number;
+  readonly duration: number;
   /**
    * 设置或返回音频/视频中的当前播放位置（以秒计）
    */
   currentTime: number;
+  /**
+   * 设置或返回进度，0 - 1
+   */
+  progress: number;
   controls: boolean;
+  /**
+   * 设置播放速度
+   */
   speedX: IPlayerSpeedX;
   reload(): void;
   play(excerpt: ExcerptMessage | Uint8Array): void;
@@ -26,19 +33,19 @@ export interface IPlayer {
 }
 
 export class Player implements IPlayer {
-  lastRequestTime: number = 0;
-  playing = false;
-  cursor = 0;
-
   speedX: IPlayerSpeedX = 1;
 
+  private playing = false;
   private currentExcerpt: IExcerptMessage | undefined;
+  private lastRequestAnimationFrameId: number | undefined;
 
-  // 毫秒
+  // unit: millisecond
   private _currentTime = 0;
   private _controls = true;
+  private _cursor = 0;
+  private _lastRequestTime: number = 0;
 
-  get duration(): number {
+  private get lastFrameTimestamp(): number {
     let excerpt = this.currentExcerpt;
 
     if (!excerpt) {
@@ -47,9 +54,11 @@ export class Player implements IPlayer {
 
     let { frames } = excerpt;
 
-    let lastFrameTimestamp = frames[frames.length - 1]?.timestamp ?? 0;
+    return frames[frames.length - 1]?.timestamp ?? 0;
+  }
 
-    return Math.floor(lastFrameTimestamp / 1000);
+  get duration(): number {
+    return Math.floor(this.lastFrameTimestamp / 1000);
   }
 
   get currentTime(): number {
@@ -57,6 +66,14 @@ export class Player implements IPlayer {
   }
   set currentTime(second: number) {
     this._currentTime = second * 1000;
+    this.checkCursor();
+  }
+
+  get progress(): number {
+    return this._currentTime / this.lastFrameTimestamp;
+  }
+  set progress(value: number) {
+    this._currentTime = this.lastFrameTimestamp * value;
     this.checkCursor();
   }
 
@@ -72,22 +89,24 @@ export class Player implements IPlayer {
   }
 
   reload(): void {
-    this.afterPlay();
+    this.afterPlayEnd();
   }
 
-  play(excerpt: ExcerptMessage | Uint8Array): void {
-    console.time("start");
-
-    this.beforePlay(excerpt);
+  play(excerpt?: ExcerptMessage | Uint8Array): void {
+    if (excerpt) {
+      this.beforePlay(excerpt);
+    }
 
     this.playExcerpt();
   }
 
   pause(): void {
-    throw new Error("Method not implemented.");
-  }
+    this.playing = false;
 
-  render(): void {}
+    if (this.lastRequestAnimationFrameId) {
+      cancelAnimationFrame(this.lastRequestAnimationFrameId);
+    }
+  }
 
   playFromFile = async (): Promise<void> => {
     let bytes = await readRecordFile();
@@ -106,10 +125,19 @@ export class Player implements IPlayer {
       container.style.position = "relative";
     }
 
-    container.appendChild(initializeController({}));
+    let controller = new PlayerController(this);
+
+    container.appendChild(controller.dom);
   }
 
-  private checkCursor(): void {}
+  private checkCursor(): void {
+    let currentTime = this._currentTime;
+
+    let index = this.currentExcerpt?.frames.findIndex(
+      ({ timestamp = 0 }) => timestamp > currentTime
+    );
+    this._cursor = index ? index - 1 : 0;
+  }
 
   private beforePlay(excerpt: ExcerptMessage | Uint8Array): void {
     if (excerpt instanceof Uint8Array) {
@@ -123,32 +151,29 @@ export class Player implements IPlayer {
 
     // initialize params
     this.playing = true;
-    this.cursor = 0;
-    this.lastRequestTime = Date.now();
+    this._cursor = 0;
+    this._lastRequestTime = Date.now();
 
     editor.focus();
     editor.updateOptions({ readOnly: true });
     editor.setValue(excerpt.value);
   }
 
-  private afterPlay(): void {
+  private afterPlayEnd(): void {
     // initialize params
     this.playing = false;
-    this.cursor = 0;
-    this.lastRequestTime = 0;
+    this._cursor = 0;
+    this._lastRequestTime = 0;
   }
 
   private playExcerpt = (): void => {
     let excerpt = this.currentExcerpt;
 
-    let pendingFrame = excerpt?.frames[this.cursor];
+    let pendingFrame = excerpt?.frames[this._cursor];
 
     if (!pendingFrame) {
       // this excerpt end.
-      console.timeEnd("start");
-      console.log(this.duration);
-
-      this.afterPlay();
+      this.afterPlayEnd();
       return;
     }
 
@@ -156,18 +181,23 @@ export class Player implements IPlayer {
 
     if (pendingFrame.timestamp! <= this._currentTime) {
       this.applyFrame(pendingFrame);
-      this.cursor += 1;
+      this._cursor += 1;
     }
 
     this.updateDuration(now);
 
-    requestAnimationFrame(this.playExcerpt);
+    this.lastRequestAnimationFrameId = requestAnimationFrame(this.playExcerpt);
   };
 
   private updateDuration(now: number): void {
-    let cost = now - this.lastRequestTime;
+    let cost = now - this._lastRequestTime;
 
-    this.lastRequestTime = now;
+    this._lastRequestTime = now;
+
+    // stop when backend
+    if (cost > 1000) {
+      return;
+    }
 
     this._currentTime += cost * this.speedX;
   }

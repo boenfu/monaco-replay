@@ -44,3 +44,10 @@ function getMRStyleRegExp(label: string): RegExp {
     `${commentLeft}${label}${commentRight}[\\w\\W]+${commentLeft}${label}${commentEnd}${commentRight}`
   );
 }
+
+export function mergeElementStyle(
+  element: HTMLElement,
+  style: Partial<CSSStyleDeclaration>
+): void {
+  Object.assign(element.style, style);
+}

@@ -1,7 +1,7 @@
 import "./iconfont";
-import { injectMRStyle } from "../utils";
+import { injectMRStyle, mergeElementStyle } from "../utils";
 
-export function iconComponent(): HTMLElement {
+export function getIcon(): HTMLElement {
   injectMRStyle(
     "icon",
     `
@@ -17,9 +17,12 @@ export function iconComponent(): HTMLElement {
 
   let div = document.createElement("div");
 
-  div.innerHTML = `<svg class="more_icon" aria-hidden="true">
-<use xlink:href="#more-play"></use>
-</svg>`;
+  mergeElementStyle(div, {
+    fontSize: "16px",
+    cursor: "pointer"
+  });
+
+  div.innerHTML = `<svg class="more_icon" aria-hidden="true"><use xlink:href="#more-play"></use></svg>`;
 
   return div;
 }
