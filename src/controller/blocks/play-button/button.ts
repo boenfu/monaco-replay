@@ -1,13 +1,13 @@
 import "./iconfont";
 import { injectMRStyle, mergeElementStyle } from "../../utils";
-import { Player } from "../../../player";
+import { Player, PlayerStatusEvent } from "../../../player";
 
 export type PlayType = "play" | "suspend";
 
 export class PlayButton {
   dom!: HTMLElement;
 
-  private playType: PlayType = this.player.playing ? "suspend" : "play";
+  private playType: PlayType = getPlayTypeByStatus(this.player.playing);
 
   constructor(private player: Player) {
     injectMRStyle(
@@ -31,6 +31,7 @@ export class PlayButton {
     });
 
     div.addEventListener("click", this.onPlayButtonClick, true);
+    player.addEventListener("status", this.onStatusChange);
 
     this.dom = div;
     this.render();
@@ -40,15 +41,24 @@ export class PlayButton {
     this.dom.innerHTML = getIconDomString(this.playType);
   }
 
-  private onPlayButtonClick = (): void => {
-    console.log(1, this.player.playing);
+  private onStatusChange = ({
+    detail: { playing },
+  }: CustomEvent<PlayerStatusEvent["data"]>): void => {
+    this.playType = getPlayTypeByStatus(playing);
+    this.render();
+  };
 
+  private onPlayButtonClick = (): void => {
     if (this.player.playing) {
       this.player.pause();
     } else {
       this.player.play();
     }
   };
+}
+
+function getPlayTypeByStatus(playing: boolean): PlayType {
+  return playing ? "suspend" : "play";
 }
 
 function getIconDomString(type: PlayType): string {

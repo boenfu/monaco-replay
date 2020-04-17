@@ -28,7 +28,6 @@ export class PlayerController {
 
     this.timer.render(player.currentTime, player.duration);
     this.progress.render(player.progress);
-    this.playButton.render();
 
     requestAnimationFrame(this.render);
   };
