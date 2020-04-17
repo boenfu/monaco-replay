@@ -31,7 +31,9 @@ export type PlayerSpeedEvent = __PlayerEvent<"speed", { speed: number }>;
 
 export type PlayerErrorEvent = __PlayerEvent<"error", { error: Error }>;
 
-export type IPlayerSpeedX = 0.1 | 1.0 | 1.25 | 1.5 | 2.0;
+export const SPEED = [0.5, 1, 1.5, 2] as const;
+
+export type PlayerSpeed = typeof SPEED[number];
 
 export interface IPlayer {
   /**
@@ -50,7 +52,7 @@ export interface IPlayer {
   /**
    * 设置播放速度
    */
-  speedX: IPlayerSpeedX;
+  speed: PlayerSpeed;
   reload(): void;
   play(excerpt: ExcerptMessage | Uint8Array): void;
   pause(): void;
@@ -58,17 +60,24 @@ export interface IPlayer {
 
 export class Player extends CustomEventTarget<PlayerEventType>
   implements IPlayer {
-  speedX: IPlayerSpeedX = 1;
-
   private currentExcerpt: IExcerptMessage | undefined;
   private lastRequestAnimationFrameId: number | undefined;
 
   private _playing = false;
-  // unit: millisecond
+  // 当前播放的时间 (millisecond)
   private _currentTime = 0;
+
+  // 是否显示控制面板
   private _controls = true;
+
+  // 当前帧数的指针
   private _cursor = 0;
+
+  // 上一帧的播放时间
   private _lastRequestTime: number = 0;
+
+  // 上一帧的播放时间
+  private _speed: PlayerSpeed = 1;
 
   private get lastFrameTimestamp(): number {
     let excerpt = this.currentExcerpt;
@@ -82,12 +91,27 @@ export class Player extends CustomEventTarget<PlayerEventType>
     return frames[frames.length - 1]?.timestamp ?? 0;
   }
 
+  get playend(): boolean {
+    return (
+      !this.playing &&
+      this._cursor >= Number(this.currentExcerpt?.frames.length)
+    );
+  }
+
+  get speed(): PlayerSpeed {
+    return this._speed;
+  }
+  set speed(speed: PlayerSpeed) {
+    this._speed = speed;
+    this.dispatchEvent(createPlayerEvent("speed", { speed }));
+  }
+
   get playing(): boolean {
     return this._playing;
   }
   set playing(playing: boolean) {
-    this.dispatchEvent(createPlayerEvent("status", { playing }));
     this._playing = playing;
+    this.dispatchEvent(createPlayerEvent("status", { playing }));
   }
 
   get duration(): number {
@@ -123,13 +147,24 @@ export class Player extends CustomEventTarget<PlayerEventType>
   }
 
   reload(): void {
-    this.afterPlayEnd();
+    this.playing = false;
+    this.currentTime = 0;
+
+    if (this.currentExcerpt) {
+      this.editor.setValue(this.currentExcerpt?.value);
+    }
   }
 
   play(excerpt?: ExcerptMessage | Uint8Array): void {
-    if (excerpt) {
-      this.beforePlay(excerpt);
+    if (this.playing) {
+      return;
     }
+
+    if (this.playend) {
+      this.reload();
+    }
+
+    this.beforePlay(excerpt);
 
     this.playExcerpt();
   }
@@ -167,36 +202,39 @@ export class Player extends CustomEventTarget<PlayerEventType>
   private checkCursor(): void {
     let currentTime = this._currentTime;
 
-    let index = this.currentExcerpt?.frames.findIndex(
-      ({ timestamp = 0 }) => timestamp > currentTime
-    );
-    this._cursor = index ? index - 1 : 0;
+    let index =
+      this.currentExcerpt?.frames.findIndex(
+        ({ timestamp = 0 }) => timestamp > currentTime
+      ) ?? 0;
+
+    this._cursor = Math.max(index - 1, 0);
   }
 
-  private beforePlay(excerpt: ExcerptMessage | Uint8Array): void {
-    if (excerpt instanceof Uint8Array) {
-      excerpt = ExcerptMessage.decode(excerpt);
-    }
-
-    // set playing excerpt
-    this.currentExcerpt = excerpt;
-
+  private beforePlay(excerpt: ExcerptMessage | Uint8Array | undefined): void {
     let editor = this.editor;
 
-    // initialize params
-    this.playing = true;
-    this._cursor = 0;
-    this._lastRequestTime = Date.now();
+    if (excerpt) {
+      if (excerpt instanceof Uint8Array) {
+        excerpt = ExcerptMessage.decode(excerpt);
+
+        editor.setValue(excerpt.value);
+        this._cursor = 0;
+      }
+
+      // set playing excerpt
+      this.currentExcerpt = excerpt;
+    }
 
     editor.focus();
     editor.updateOptions({ readOnly: true });
-    editor.setValue(excerpt.value);
+
+    // initialize params
+    this.playing = true;
+    this._lastRequestTime = Date.now();
   }
 
   private afterPlayEnd(): void {
-    // initialize params
     this.playing = false;
-    this._cursor = 0;
     this._lastRequestTime = 0;
   }
 
@@ -233,7 +271,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
       return;
     }
 
-    this._currentTime += cost * this.speedX;
+    this._currentTime += cost * this.speed;
   }
 
   private applyFrame(frame: IFrameMessage): void {

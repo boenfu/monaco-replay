@@ -21,7 +21,7 @@ export class Progress {
       borderColor: PRIMARY_COLOR,
       borderStyle: "solid",
       borderTopWidth: "4px",
-      borderBottomWidth: "4px"
+      borderBottomWidth: "4px",
     });
 
     wrapper.addEventListener("click", this.onWrapperClick);
@@ -34,8 +34,16 @@ export class Progress {
 
   render(progress: number): void {
     mergeElementStyle(this.progressLine, {
-      width: `${progress * 100}%`
+      width: `${progress * 100}%`,
     });
+  }
+
+  play(): void {
+    this.player.play();
+  }
+
+  pause(): void {
+    this.player.pause();
   }
 
   updateProgress(progress: number): void {
@@ -64,7 +72,7 @@ export class Progress {
       width: "0",
       height: "100%",
       borderBottomLeftRadius: "2px",
-      borderTopLeftRadius: "2px"
+      borderTopLeftRadius: "2px",
     });
 
     this.dom.appendChild(progressLine);
@@ -86,7 +94,7 @@ class ProgressCursor {
       height: "16px",
       borderRadius: "2px",
       background: "#3978ff",
-      cursor: "pointer"
+      cursor: "pointer",
     });
 
     cursor.addEventListener("mousedown", this.onMouseDown);
@@ -95,6 +103,7 @@ class ProgressCursor {
   }
 
   private onMouseDown = (): void => {
+    this.progress.pause();
     this.moving = true;
 
     document.addEventListener("mouseup", this.onMouseUp);
@@ -107,6 +116,7 @@ class ProgressCursor {
     }
 
     this.moving = false;
+    this.progress.play();
 
     document.removeEventListener("mouseup", this.onMouseUp);
     document.removeEventListener("mousemove", this.onMouseMove);

@@ -1,11 +1,5 @@
 import { mergeElementStyle } from "./utils";
-import {
-  Progress,
-  getSpeedBlock,
-  FileButton,
-  Timer,
-  PlayButton,
-} from "./blocks";
+import { Progress, Speed, FileButton, Timer, PlayButton } from "./blocks";
 import { Player } from "../player";
 import { PRIMARY_COLOR } from "./theme";
 
@@ -16,6 +10,7 @@ export class PlayerController {
   private playButton = new PlayButton(this.player);
   private fileButton = new FileButton(this.player);
   private progress = new Progress(this.player);
+  private Speed = new Speed(this.player);
 
   constructor(private player: Player) {
     this.initialize();
@@ -58,7 +53,7 @@ export class PlayerController {
       this.playButton.dom,
       this.progress.dom,
       this.timer.dom,
-      getSpeedBlock(),
+      this.Speed.dom,
       this.fileButton.dom
     );
 
