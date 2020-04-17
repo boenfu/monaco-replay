@@ -3,7 +3,7 @@ import {
   ExcerptMessage,
   FrameMessage,
   IFrameMessage,
-  IExcerptMessage
+  IExcerptMessage,
 } from "./protobuf";
 import { PlayerController } from "./controller";
 
@@ -30,15 +30,16 @@ export interface IPlayer {
   reload(): void;
   play(excerpt: ExcerptMessage | Uint8Array): void;
   pause(): void;
+  onStatusChange?(): void;
 }
 
 export class Player implements IPlayer {
   speedX: IPlayerSpeedX = 1;
 
-  private playing = false;
   private currentExcerpt: IExcerptMessage | undefined;
   private lastRequestAnimationFrameId: number | undefined;
 
+  private _playing = false;
   // unit: millisecond
   private _currentTime = 0;
   private _controls = true;
@@ -55,6 +56,15 @@ export class Player implements IPlayer {
     let { frames } = excerpt;
 
     return frames[frames.length - 1]?.timestamp ?? 0;
+  }
+
+  get playing(): boolean {
+    return this._playing;
+  }
+  set playing(playing: boolean) {
+    // emit event
+
+    this._playing = playing;
   }
 
   get duration(): number {
@@ -101,7 +111,7 @@ export class Player implements IPlayer {
   }
 
   pause(): void {
-    this.playing = false;
+    this._playing = false;
 
     if (this.lastRequestAnimationFrameId) {
       cancelAnimationFrame(this.lastRequestAnimationFrameId);
@@ -150,7 +160,7 @@ export class Player implements IPlayer {
     let editor = this.editor;
 
     // initialize params
-    this.playing = true;
+    this._playing = true;
     this._cursor = 0;
     this._lastRequestTime = Date.now();
 
@@ -161,7 +171,7 @@ export class Player implements IPlayer {
 
   private afterPlayEnd(): void {
     // initialize params
-    this.playing = false;
+    this._playing = false;
     this._cursor = 0;
     this._lastRequestTime = 0;
   }

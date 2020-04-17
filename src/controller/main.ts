@@ -1,6 +1,11 @@
 import { mergeElementStyle } from "./utils";
-import { getIcon } from "./icon";
-import { Progress, getSpeedBlock, FileButton, Timer } from "./blocks";
+import {
+  Progress,
+  getSpeedBlock,
+  FileButton,
+  Timer,
+  PlayButton,
+} from "./blocks";
 import { Player } from "../player";
 import { PRIMARY_COLOR } from "./theme";
 
@@ -8,6 +13,7 @@ export class PlayerController {
   dom!: HTMLElement;
 
   private timer = new Timer();
+  private playButton = new PlayButton(this.player);
   private fileButton = new FileButton(this.player);
   private progress = new Progress(this.player);
 
@@ -22,6 +28,7 @@ export class PlayerController {
 
     this.timer.render(player.currentTime, player.duration);
     this.progress.render(player.progress);
+    this.playButton.render();
 
     requestAnimationFrame(this.render);
   };
@@ -45,13 +52,11 @@ export class PlayerController {
       boxShadow: "0 -3px 8px 0 hsla(0, 0%, 0%, 0.06)",
       color: "#FFF",
       fontSize: "14px",
-      userSelect: "none"
+      userSelect: "none",
     });
 
-    let start = getIcon();
-
     container.append(
-      start,
+      this.playButton.dom,
       this.progress.dom,
       this.timer.dom,
       getSpeedBlock(),

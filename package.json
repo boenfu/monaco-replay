@@ -25,6 +25,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "fast-text-encoding": "^1.0.1",
     "file-saver": "^2.0.2",
     "protobufjs": "^6.8.9"
   }
