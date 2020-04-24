@@ -3,6 +3,10 @@ import { Progress, Speed, FileButton, Timer, PlayButton } from "./blocks";
 import { Player } from "../player";
 import { PRIMARY_COLOR } from "./theme";
 
+export interface PlayerControllerOptions {
+  showFileButton?: boolean;
+}
+
 export class PlayerController {
   dom!: HTMLElement;
 
@@ -12,20 +16,12 @@ export class PlayerController {
   private progress = new Progress(this.player);
   private Speed = new Speed(this.player);
 
-  constructor(private player: Player) {
+  constructor(
+    private player: Player,
+    private options?: PlayerControllerOptions
+  ) {
     this.initialize();
-
-    requestAnimationFrame(this.render);
   }
-
-  private render = (): void => {
-    let player = this.player;
-
-    this.timer.render(player.currentTime, player.duration);
-    this.progress.render(player.progress);
-
-    requestAnimationFrame(this.render);
-  };
 
   private initialize(): void {
     let container = document.createElement("div");
@@ -53,10 +49,22 @@ export class PlayerController {
       this.playButton.dom,
       this.progress.dom,
       this.timer.dom,
-      this.Speed.dom,
-      this.fileButton.dom
+      this.Speed.dom
     );
+
+    if (this.options?.showFileButton) {
+      container.append(this.fileButton.dom);
+    }
+
+    this.player.addEventListener("timeupdate", this.onTimeUpdate);
 
     this.dom = container;
   }
+
+  private onTimeUpdate = (): void => {
+    let player = this.player;
+
+    this.timer.render(player.currentTime, player.duration);
+    this.progress.render(player.progress);
+  };
 }

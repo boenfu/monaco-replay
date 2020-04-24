@@ -60,7 +60,7 @@ export class Speed {
       position: "absolute",
       flexDirection: "column",
       width: "100%",
-      padding: "12px 4px",
+      padding: "8px 6px",
       borderRadius: "4px",
       background: PRIMARY_COLOR,
       color: "#fff",
@@ -70,7 +70,7 @@ export class Speed {
       display: getDisplayValue(this.popupActive),
     });
 
-    let className = "more_speed";
+    let className = "mrp_speed";
     wrapper.classList.add(className);
 
     injectMRStyle(
@@ -78,7 +78,8 @@ export class Speed {
       `
       .${className} > * {
         border-radius: 2px;
-        padding: 4px;
+        padding: 2px 4px;
+        margin: 2px 0;
         text-align: center;
       }
       
@@ -108,7 +109,7 @@ export class Speed {
 function createSpeedItem(speed: number): HTMLElement {
   let span = document.createElement("span");
 
-  span.innerText = `${speed.toFixed(1)} X`;
+  span.innerText = `${speed.toFixed(1)} x`;
   span.dataset.speed = String(speed);
 
   return span;

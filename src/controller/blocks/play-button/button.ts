@@ -2,7 +2,7 @@ import "./iconfont";
 import { injectMRStyle, mergeElementStyle } from "../../utils";
 import { Player, PlayerStatusEvent } from "../../../player";
 
-export type PlayType = "play" | "suspend";
+type PlayType = "play" | "suspend";
 
 export class PlayButton {
   dom!: HTMLElement;
@@ -10,10 +10,14 @@ export class PlayButton {
   private playType: PlayType = getPlayTypeByStatus(this.player.playing);
 
   constructor(private player: Player) {
+    player.addEventListener("status", this.onStatusChange);
+
+    let div = document.createElement("div");
+
     injectMRStyle(
       "icon",
       `
-      .more_icon {
+      .mrp_icon {
         width: 1em;
         height: 1em;
         vertical-align: -0.15em;
@@ -23,17 +27,15 @@ export class PlayButton {
       `
     );
 
-    let div = document.createElement("div");
-
     mergeElementStyle(div, {
       fontSize: "16px",
       cursor: "pointer",
     });
 
     div.addEventListener("click", this.onPlayButtonClick, true);
-    player.addEventListener("status", this.onStatusChange);
 
     this.dom = div;
+
     this.render();
   }
 
@@ -45,6 +47,7 @@ export class PlayButton {
     detail: { playing },
   }: CustomEvent<PlayerStatusEvent["data"]>): void => {
     this.playType = getPlayTypeByStatus(playing);
+
     this.render();
   };
 
@@ -62,5 +65,5 @@ function getPlayTypeByStatus(playing: boolean): PlayType {
 }
 
 function getIconDomString(type: PlayType): string {
-  return `<svg class="more_icon" aria-hidden="true"><use xlink:href="#more-${type}"></use></svg>`;
+  return `<svg class="mrp_icon" aria-hidden="true"><use xlink:href="#mrp-${type}"></use></svg>`;
 }

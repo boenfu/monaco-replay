@@ -2,9 +2,18 @@ import { mergeElementStyle } from "../utils";
 import { PRIMARY_COLOR } from "../theme";
 import { Player } from "../../player";
 
+const REMAIN_PLAY_TIMEOUT = 600;
+
 export class Progress {
-  dom!: HTMLElement;
   private progressLine!: HTMLElement;
+
+  private cursor!: ProgressCursor;
+
+  dom!: HTMLElement;
+
+  get playing(): boolean {
+    return this.player.playing;
+  }
 
   constructor(private player: Player) {
     let wrapper = document.createElement("section");
@@ -24,7 +33,7 @@ export class Progress {
       borderBottomWidth: "4px",
     });
 
-    wrapper.addEventListener("click", this.onWrapperClick);
+    wrapper.addEventListener("mousedown", this.onWrapperMouseDown, true);
 
     this.dom = wrapper;
 
@@ -47,21 +56,20 @@ export class Progress {
   }
 
   updateProgress(progress: number): void {
-    this.player.pause();
+    if (this.playing) {
+      this.player.pause();
+    }
 
     this.player.progress = progress;
-
-    setTimeout(() => {
-      this.player.play();
-    }, 300);
   }
 
-  private onWrapperClick = (event: MouseEvent): void => {
-    this.updateProgress(getProgressByEvent(this.dom, event));
+  private onWrapperMouseDown = (event: MouseEvent): void => {
+    this.cursor.onMouseDown(event);
   };
 
   private initializeCursor(): void {
-    this.dom.appendChild(new ProgressCursor(this).dom);
+    this.cursor = new ProgressCursor(this);
+    this.dom.appendChild(this.cursor.dom);
   }
 
   private initializeLine(): void {
@@ -83,6 +91,7 @@ export class Progress {
 
 class ProgressCursor {
   private moving = false;
+  private pausedBeforeUpdate = false;
 
   dom: HTMLElement;
 
@@ -102,29 +111,46 @@ class ProgressCursor {
     this.dom = cursor;
   }
 
-  private onMouseDown = (): void => {
-    this.progress.pause();
+  public onMouseDown = (event: MouseEvent): void => {
+    if (!this.progress.playing) {
+      this.pausedBeforeUpdate = true;
+    }
+
     this.moving = true;
+    this.updateProgress(event);
 
     document.addEventListener("mouseup", this.onMouseUp);
     document.addEventListener("mousemove", this.onMouseMove);
   };
 
-  private onMouseUp = (): void => {
+  private onMouseUp = (event: MouseEvent): void => {
     if (!this.moving) {
       return;
     }
 
     this.moving = false;
-    this.progress.play();
+    this.updateProgress(event);
+
+    if (!this.pausedBeforeUpdate) {
+      // remain play
+      setTimeout(() => {
+        this.progress.play();
+      }, REMAIN_PLAY_TIMEOUT);
+    } else {
+      this.pausedBeforeUpdate = false;
+    }
 
     document.removeEventListener("mouseup", this.onMouseUp);
     document.removeEventListener("mousemove", this.onMouseMove);
   };
 
   private onMouseMove = (event: MouseEvent): void => {
-    this.progress.updateProgress(getProgressByEvent(this.progress.dom, event));
+    this.updateProgress(event);
   };
+
+  private updateProgress(event: MouseEvent): void {
+    this.progress.updateProgress(getProgressByEvent(this.progress.dom, event));
+  }
 }
 
 function getProgressByEvent(dom: Element, { clientX }: MouseEvent): number {

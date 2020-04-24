@@ -5,12 +5,15 @@ export class Timer {
 
   constructor() {
     let timer = document.createElement("span");
+
     mergeElementStyle(timer, { marginRight: "14px" });
 
     this.dom = timer;
+
+    this.render();
   }
 
-  render(currentTime: number, duration: number): void {
+  render(currentTime = 0, duration = 0): void {
     this.dom.innerText = `${formatTime(currentTime)} / ${formatTime(duration)}`;
   }
 }

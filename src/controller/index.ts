@@ -1,2 +1,2 @@
-export * from "./blocks/play-button";
+export * from "./blocks";
 export * from "./main";

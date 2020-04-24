@@ -1,9 +1,7 @@
 import {
   IOperation,
-  IFrameMessage,
   IExcerptMessage,
   CodeEditorViewStateMessage,
-  ExcerptMessage
 } from "./protobuf";
 
 export interface IRecorder {
@@ -32,12 +30,10 @@ export class Recorder implements IRecorder {
       this.onModelContentChange
     );
 
-    console.log(this.editor.getValue());
-
     this.currentExcerpt = {
       value: this.editor.getValue(),
       frames: [],
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.record();
@@ -67,13 +63,13 @@ export class Recorder implements IRecorder {
 
   private onModelContentChange = ({
     versionId,
-    changes
+    changes,
   }: Monaco.IModelContentChangedEvent): void => {
     this.pendingOperationDict[versionId] = changes.map(
       ({ range, text, forceMoveMarkers }: any): IOperation => ({
         range,
         text,
-        forceMoveMarkers
+        forceMoveMarkers,
       })
     );
   };
@@ -107,7 +103,7 @@ export class Recorder implements IRecorder {
     currentExcerpt.frames.push({
       operation,
       viewState,
-      timestamp
+      timestamp,
     });
   }
 }

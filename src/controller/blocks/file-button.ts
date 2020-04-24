@@ -6,8 +6,10 @@ export class FileButton {
 
   constructor(player: Player) {
     let button = document.createElement("span");
-    button.innerText = ". . .";
+
     mergeElementStyle(button, { marginLeft: "14px" });
+
+    button.innerText = ". . .";
     button.onclick = player.playFromFile;
 
     this.dom = button;

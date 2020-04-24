@@ -16,20 +16,23 @@ export type ExtractPlayerEventData<TType extends PlayerEventType> = Extract<
 >;
 
 export type PlayerEvent =
+  | PlayerTimeupdateEvent
   | PlayerStatusEvent
   | PlayerSpeedEvent
   | PlayerErrorEvent;
 
-export type __PlayerEvent<TType, TData> = {
+export interface IPlayerEvent<TType, TData> {
   type: TType;
   data: TData;
-};
+}
 
-export type PlayerStatusEvent = __PlayerEvent<"status", { playing: boolean }>;
+export type PlayerTimeupdateEvent = IPlayerEvent<"timeupdate", undefined>;
 
-export type PlayerSpeedEvent = __PlayerEvent<"speed", { speed: number }>;
+export type PlayerStatusEvent = IPlayerEvent<"status", { playing: boolean }>;
 
-export type PlayerErrorEvent = __PlayerEvent<"error", { error: Error }>;
+export type PlayerSpeedEvent = IPlayerEvent<"speed", { speed: number }>;
+
+export type PlayerErrorEvent = IPlayerEvent<"error", { error: Error }>;
 
 export const SPEED = [0.5, 1, 1.5, 2] as const;
 
@@ -61,9 +64,10 @@ export interface IPlayer {
 export class Player extends CustomEventTarget<PlayerEventType>
   implements IPlayer {
   private currentExcerpt: IExcerptMessage | undefined;
-  private lastRequestAnimationFrameId: number | undefined;
+  private requestAnimationFrameId: number | undefined;
 
   private _playing = false;
+
   // 当前播放的时间 (millisecond)
   private _currentTime = 0;
 
@@ -79,6 +83,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
   // 上一帧的播放时间
   private _speed: PlayerSpeed = 1;
 
+  // 最后一帧的时间戳
   private get lastFrameTimestamp(): number {
     let excerpt = this.currentExcerpt;
 
@@ -91,7 +96,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
     return frames[frames.length - 1]?.timestamp ?? 0;
   }
 
-  get playend(): boolean {
+  get ended(): boolean {
     return (
       !this.playing &&
       this._cursor >= Number(this.currentExcerpt?.frames.length)
@@ -103,7 +108,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
   }
   set speed(speed: PlayerSpeed) {
     this._speed = speed;
-    this.dispatchEvent(createPlayerEvent("speed", { speed }));
+    this.dispatchEvent(createEvent("speed", { speed }));
   }
 
   get playing(): boolean {
@@ -111,7 +116,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
   }
   set playing(playing: boolean) {
     this._playing = playing;
-    this.dispatchEvent(createPlayerEvent("status", { playing }));
+    this.dispatchEvent(createEvent("status", { playing }));
   }
 
   get duration(): number {
@@ -122,16 +127,14 @@ export class Player extends CustomEventTarget<PlayerEventType>
     return Math.floor(this._currentTime / 1000);
   }
   set currentTime(second: number) {
-    this._currentTime = second * 1000;
-    this.checkCursor();
+    this.handleTimeupdate(second * 1000);
   }
 
   get progress(): number {
     return this._currentTime / this.lastFrameTimestamp;
   }
   set progress(value: number) {
-    this._currentTime = this.lastFrameTimestamp * value;
-    this.checkCursor();
+    this.handleTimeupdate(this.lastFrameTimestamp * value);
   }
 
   get controls(): boolean {
@@ -143,6 +146,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
 
   constructor(private editor: Monaco.Editor) {
     super();
+
     this.initialize();
   }
 
@@ -160,7 +164,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
       return;
     }
 
-    if (this.playend) {
+    if (this.ended) {
       this.reload();
     }
 
@@ -172,8 +176,8 @@ export class Player extends CustomEventTarget<PlayerEventType>
   pause(): void {
     this.playing = false;
 
-    if (this.lastRequestAnimationFrameId) {
-      cancelAnimationFrame(this.lastRequestAnimationFrameId);
+    if (this.requestAnimationFrameId) {
+      cancelAnimationFrame(this.requestAnimationFrameId);
     }
   }
 
@@ -194,17 +198,19 @@ export class Player extends CustomEventTarget<PlayerEventType>
       container.style.position = "relative";
     }
 
-    let controller = new PlayerController(this);
+    let controller = new PlayerController(this, { showFileButton: true });
 
     container.appendChild(controller.dom);
   }
 
-  private checkCursor(): void {
-    let currentTime = this._currentTime;
+  private handleTimeupdate(newCurrentTime: number): void {
+    this._currentTime = newCurrentTime;
+
+    this.dispatchEvent(createEvent("timeupdate", undefined));
 
     let index =
       this.currentExcerpt?.frames.findIndex(
-        ({ timestamp = 0 }) => timestamp > currentTime
+        ({ timestamp = 0 }) => timestamp > newCurrentTime
       ) ?? 0;
 
     this._cursor = Math.max(index - 1, 0);
@@ -258,7 +264,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
 
     this.updateDuration(now);
 
-    this.lastRequestAnimationFrameId = requestAnimationFrame(this.playExcerpt);
+    this.requestAnimationFrameId = requestAnimationFrame(this.playExcerpt);
   };
 
   private updateDuration(now: number): void {
@@ -272,6 +278,8 @@ export class Player extends CustomEventTarget<PlayerEventType>
     }
 
     this._currentTime += cost * this.speed;
+
+    this.dispatchEvent(createEvent("timeupdate", undefined));
   }
 
   private applyFrame(frame: IFrameMessage): void {
@@ -293,7 +301,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
   }
 }
 
-function createPlayerEvent<TType extends PlayerEventType>(
+function createEvent<TType extends PlayerEventType>(
   type: TType,
   data: ExtractPlayerEventData<TType>["data"]
 ): CustomEvent {

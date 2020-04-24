@@ -5,8 +5,8 @@ export function saveRecordBytes(
   fileName: string = String(Date.now())
 ): void {
   let blob = new Blob([bytes], {
-    type: "text/plain;charset=utf-8"
+    type: "text/plain;charset=utf-8",
   });
 
-  FileSaver.saveAs(blob, fileName, { autoBom: true });
+  FileSaver.saveAs(blob, `${fileName}.mrp`, { autoBom: true });
 }
