@@ -13,6 +13,7 @@
     "lib"
   ],
   "scripts": {
+    "prepublishOnly": "yarn build",
     "dev": "cd ./template && yarn start",
     "watch": "tsc --watch",
     "build": "tsc"
