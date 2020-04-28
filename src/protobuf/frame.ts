@@ -29,6 +29,10 @@ export interface IFrameMessage {
   operation: IOperation[];
   viewState: Monaco.ICodeEditorViewState;
   timestamp?: number;
+  /**
+   * in first frame
+   */
+  value?: string;
 }
 
 export class FrameMessage extends Message<IFrameMessage>
@@ -42,6 +46,9 @@ export class FrameMessage extends Message<IFrameMessage>
   @Field.d(3, "int32")
   timestamp!: number;
 
+  @Field.d(4, "string", "optional")
+  value?: string | undefined;
+
   constructor(frame: IFrameMessage) {
     super(frame);
   }
@@ -52,7 +59,7 @@ export class FrameMessage extends Message<IFrameMessage>
       ({
         range: { startColumn, startLineNumber, endColumn, endLineNumber },
         text,
-        forceMoveMarkers
+        forceMoveMarkers,
       }): Monaco.IIdentifiedSingleEditOperation => ({
         text,
         range: new Range(
@@ -61,7 +68,7 @@ export class FrameMessage extends Message<IFrameMessage>
           endLineNumber,
           endColumn
         ),
-        forceMoveMarkers
+        forceMoveMarkers,
       })
     );
 
@@ -70,7 +77,7 @@ export class FrameMessage extends Message<IFrameMessage>
     return {
       operation,
       viewState,
-      timestamp
+      timestamp,
     };
   }
 }

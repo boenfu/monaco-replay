@@ -4,14 +4,16 @@ import {
   IOperation,
   IExcerptMessage,
   CodeEditorViewStateMessage,
+  IFrameMessage,
 } from "./protobuf";
 import { saveExcerptMessageToFile, getExcerptMessageFormData } from "./utils";
 
 export interface IRecorder {
-  start(): void;
+  start(initialExcerpt?: { timestamp: number }): void;
   pause(): void;
   stop(): void;
   getExcerpt(): void;
+  onFrame?(frame: IFrameMessage): void;
 }
 
 export class Recorder implements IRecorder {
@@ -26,9 +28,16 @@ export class Recorder implements IRecorder {
 
   private disposable: Monaco.IDisposable | undefined;
 
+  // hook
+  onFrame: IRecorder["onFrame"];
+
   constructor(private editor: Monaco.Editor) {}
 
-  start(): void {
+  start(
+    initialExcerpt = {
+      timestamp: Date.now(),
+    }
+  ): void {
     this.disposable = this.editor.onDidChangeModelContent(
       this.onModelContentChange
     );
@@ -36,7 +45,7 @@ export class Recorder implements IRecorder {
     this.currentExcerpt = {
       value: this.editor.getValue(),
       frames: [],
-      timestamp: Date.now(),
+      ...initialExcerpt,
     };
 
     this.record();
@@ -127,10 +136,18 @@ export class Recorder implements IRecorder {
     this.lastViewStateBytes = viewStateBytes;
     this.pendingOperationDict = {};
 
-    currentExcerpt.frames.push({
+    let frame: IFrameMessage = {
       operation,
       viewState,
       timestamp,
-    });
+    };
+
+    if (!currentExcerpt.frames.length) {
+      frame.value = this.editor.getValue();
+    }
+
+    currentExcerpt.frames.push(frame);
+
+    this.onFrame?.(frame);
   }
 }

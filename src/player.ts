@@ -311,13 +311,17 @@ export class Player extends CustomEventTarget<PlayerEventType>
   }
 
   private applyFrame(frame: IFrameMessage): void {
-    let { operation, viewState } = new FrameMessage(frame).toFrame();
+    let { operation, viewState, value } = new FrameMessage(frame).toFrame();
 
     if (operation.length) {
       let model = this.editor.getModel();
 
       if (!model) {
         return;
+      }
+
+      if (value) {
+        this.editor.setValue(value);
       }
 
       for (let item of Array.from(operation)) {
