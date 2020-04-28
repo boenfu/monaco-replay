@@ -5,8 +5,9 @@ import {
   IFrameMessage,
   IExcerptMessage,
 } from "./protobuf";
-import { PlayerController } from "./controller";
+import { PlayerController, PlayerControllerOptions } from "./controller";
 import { CustomEventTarget } from "./core";
+import { PlayerCache } from "./cache";
 
 export type PlayerEventType = PlayerEvent["type"];
 
@@ -61,10 +62,15 @@ export interface IPlayer {
   pause(): void;
 }
 
+export interface PlayerOptions extends PlayerControllerOptions {}
+
 export class Player extends CustomEventTarget<PlayerEventType>
   implements IPlayer {
   private currentExcerpt: IExcerptMessage | undefined;
   private requestAnimationFrameId: number | undefined;
+
+  private cache: PlayerCache | undefined;
+  private cacheModel!: Monaco.Model;
 
   private _playing = false;
 
@@ -144,7 +150,11 @@ export class Player extends CustomEventTarget<PlayerEventType>
     this._controls = show;
   }
 
-  constructor(private editor: Monaco.Editor) {
+  constructor(
+    private monaco: Monaco.Monaco,
+    private editor: Monaco.Editor,
+    private options?: PlayerOptions
+  ) {
     super();
 
     this.initialize();
@@ -198,22 +208,37 @@ export class Player extends CustomEventTarget<PlayerEventType>
       container.style.position = "relative";
     }
 
-    let controller = new PlayerController(this, { showFileButton: true });
+    let controller = new PlayerController(this, this.options);
 
     container.appendChild(controller.dom);
+
+    // cache
+
+    this.cacheModel = this.monaco.editor.createModel("", undefined, "mrp");
   }
 
   private handleTimeupdate(newCurrentTime: number): void {
+    // TODO (boen): 🔍查找 index 可以换成二分
+    let newCursor = Math.max(
+      (this.currentExcerpt?.frames.findIndex(
+        ({ timestamp = 0 }) => timestamp > newCurrentTime
+      ) ?? 0) - 1,
+      0
+    );
+
+    let newValue = this.cache?.getValue(newCursor);
+
+    if (!newValue) {
+      return;
+    }
+
     this._currentTime = newCurrentTime;
 
     this.dispatchEvent(createEvent("timeupdate", undefined));
 
-    let index =
-      this.currentExcerpt?.frames.findIndex(
-        ({ timestamp = 0 }) => timestamp > newCurrentTime
-      ) ?? 0;
+    this._cursor = newCursor;
 
-    this._cursor = Math.max(index - 1, 0);
+    this.editor.setValue(newValue);
   }
 
   private beforePlay(excerpt: ExcerptMessage | Uint8Array | undefined): void {
@@ -229,6 +254,9 @@ export class Player extends CustomEventTarget<PlayerEventType>
 
       // set playing excerpt
       this.currentExcerpt = excerpt;
+
+      // build cache
+      this.cache = new PlayerCache(this.cacheModel, this.currentExcerpt);
     }
 
     editor.focus();

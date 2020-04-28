@@ -2,7 +2,7 @@ import * as monaco from "monaco-editor/esm/vs/editor/editor.main.js";
 import { MonacoReplay } from "../lib/main";
 
 self.MonacoEnvironment = {
-  getWorkerUrl: function(_, label) {
+  getWorkerUrl: function (_, label) {
     if (label === "json") {
       return "./json.worker.js";
     }
@@ -16,13 +16,13 @@ self.MonacoEnvironment = {
       return "./ts.worker.js";
     }
     return "./editor.worker.js";
-  }
+  },
 };
 
 let editor = monaco.editor.create(document.getElementById("container"), {
   value: ["function x() {", '\tconsole.log("Hello world!");', "}"].join("\n"),
   language: "javascript",
-  theme: "vs-dark"
+  theme: "vs-dark",
 });
 
-window.rp = new MonacoReplay(editor);
+window.rp = new MonacoReplay(monaco, editor);

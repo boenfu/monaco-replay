@@ -1,8 +1,11 @@
+import "fast-text-encoding";
+
 import {
   IOperation,
   IExcerptMessage,
   CodeEditorViewStateMessage,
 } from "./protobuf";
+import { saveExcerptMessageToFile, getExcerptMessageFormData } from "./utils";
 
 export interface IRecorder {
   start(): void;
@@ -56,8 +59,32 @@ export class Recorder implements IRecorder {
     return this.currentExcerpt;
   }
 
+  getExcerptFormData(
+    fieldName?: string,
+    fileName?: string
+  ): FormData | undefined {
+    let excerpt = this.getExcerpt();
+
+    if (!excerpt) {
+      return;
+    }
+
+    return getExcerptMessageFormData(excerpt, fieldName, fileName);
+  }
+
+  saveToFile(name?: string): void {
+    let excerpt = this.getExcerpt();
+
+    if (!excerpt) {
+      return;
+    }
+
+    saveExcerptMessageToFile(excerpt, name);
+  }
+
   private record = (): void => {
     this.generateFrame();
+
     requestAnimationFrame(this.record);
   };
 
