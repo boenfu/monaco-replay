@@ -62,12 +62,16 @@ export interface IPlayer {
   pause(): void;
 }
 
-export interface PlayerOptions extends PlayerControllerOptions {}
+export interface PlayerOptions extends PlayerControllerOptions {
+  showController?: boolean;
+}
 
 export class Player extends CustomEventTarget<PlayerEventType>
   implements IPlayer {
   private currentExcerpt: IExcerptMessage | undefined;
   private requestAnimationFrameId: number | undefined;
+
+  private controller: PlayerController | undefined;
 
   private cache: PlayerCache | undefined;
   private cacheModel!: Monaco.Model;
@@ -197,10 +201,10 @@ export class Player extends CustomEventTarget<PlayerEventType>
     this.play(bytes);
   };
 
-  private initialize(): void {
+  showController(): void {
     let container = this.editor.getContainerDomNode();
 
-    if (!container) {
+    if (!container || PlayerController.isExisted(container)) {
       return;
     }
 
@@ -212,8 +216,16 @@ export class Player extends CustomEventTarget<PlayerEventType>
 
     container.appendChild(controller.dom);
 
-    // cache
+    this.controller = controller;
+  }
 
+  private initialize(): void {
+    // controller
+    if (this.options?.showController) {
+      this.showController();
+    }
+
+    // cache
     this.cacheModel = this.monaco.editor.createModel("", undefined, "mrp");
   }
 

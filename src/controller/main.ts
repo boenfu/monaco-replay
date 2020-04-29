@@ -1,7 +1,9 @@
-import { mergeElementStyle } from "./utils";
+import { injectMRStyle } from "./utils";
 import { Progress, Speed, FileButton, Timer, PlayButton } from "./blocks";
 import { Player } from "../player";
 import { PRIMARY_COLOR } from "./theme";
+
+const PLAYER_CONTROLLER_CLASS_NAME = "mrp_container";
 
 export interface PlayerControllerOptions {
   showFileButton?: boolean;
@@ -26,24 +28,31 @@ export class PlayerController {
   private initialize(): void {
     let container = document.createElement("div");
 
-    mergeElementStyle(container, {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      position: "absolute",
-      left: "8%",
-      right: "8%",
-      bottom: "8px",
-      padding: "0 24px",
-      backgroundColor: PRIMARY_COLOR,
-      height: "50px",
-      borderTopLeftRadius: "12px",
-      borderTopRightRadius: "12px",
-      boxShadow: "0 -3px 8px 0 hsla(0, 0%, 0%, 0.06)",
-      color: "#FFF",
-      fontSize: "14px",
-      userSelect: "none",
-    });
+    container.classList.add(PLAYER_CONTROLLER_CLASS_NAME);
+
+    injectMRStyle(
+      "container",
+      `
+      .${PLAYER_CONTROLLER_CLASS_NAME} {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        bottom: 8px;
+        padding: 0 24px;
+        background-color: ${PRIMARY_COLOR};
+        height: 50px;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        box-shadow: 0 -3px 8px 0 hsla(0, 0%, 0%, 0.06);
+        color: #FFF;
+        font-size: 14px;
+        user-select: none;
+      }
+      `
+    );
 
     container.append(
       this.playButton.dom,
@@ -67,4 +76,8 @@ export class PlayerController {
     this.timer.render(player.currentTime, player.duration);
     this.progress.render(player.progress);
   };
+
+  static isExisted(element: HTMLElement) {
+    return !!element.querySelector(`.${PLAYER_CONTROLLER_CLASS_NAME}`);
+  }
 }
