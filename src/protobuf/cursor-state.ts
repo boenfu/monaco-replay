@@ -1,18 +1,20 @@
 import { Message, Field } from "protobufjs/light";
+import { editor, IPosition } from "monaco-editor";
+
 import { PositionMessage } from "./position";
 
-export class CursorStateMessage extends Message<Monaco.ICursorState>
-  implements Monaco.ICursorState {
+export class CursorStateMessage extends Message<editor.ICursorState>
+  implements editor.ICursorState {
   @Field.d(1, "bool")
   inSelectionMode!: boolean;
 
   @Field.d(2, PositionMessage)
-  selectionStart!: Monaco.IPosition;
+  selectionStart!: IPosition;
 
   @Field.d(3, PositionMessage)
-  position!: Monaco.IPosition;
+  position!: IPosition;
 
-  constructor(cursorState: Monaco.ICursorState) {
+  constructor(cursorState: editor.ICursorState) {
     super(cursorState);
   }
 }

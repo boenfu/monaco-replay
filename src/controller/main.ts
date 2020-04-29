@@ -78,6 +78,6 @@ export class PlayerController {
   };
 
   static isExisted(element: HTMLElement) {
-    return !!element.querySelector(`.${PLAYER_CONTROLLER_CLASS_NAME}`);
+    return !!element?.querySelector(`.${PLAYER_CONTROLLER_CLASS_NAME}`);
   }
 }

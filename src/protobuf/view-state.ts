@@ -1,8 +1,9 @@
 import { Message, Field } from "protobufjs/light";
 import { PositionMessage } from "./position";
+import { editor, IPosition } from "monaco-editor";
 
-export class ViewStateMessage extends Message<Monaco.IViewState>
-  implements Monaco.IViewState {
+export class ViewStateMessage extends Message<editor.IViewState>
+  implements editor.IViewState {
   @Field.d(1, "int32", "optional")
   scrollTop?: number | undefined;
 
@@ -13,12 +14,12 @@ export class ViewStateMessage extends Message<Monaco.IViewState>
   scrollLeft!: number;
 
   @Field.d(4, PositionMessage)
-  firstPosition!: Monaco.IPosition;
+  firstPosition!: IPosition;
 
   @Field.d(5, "int32")
   firstPositionDeltaTop!: number;
 
-  constructor(viewState: Monaco.IViewState) {
+  constructor(viewState: editor.IViewState) {
     super(viewState);
   }
 }

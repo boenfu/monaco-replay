@@ -1,4 +1,5 @@
 import "fast-text-encoding";
+import { editor, IDisposable } from "monaco-editor";
 
 import {
   IOperation,
@@ -26,12 +27,12 @@ export class Recorder implements IRecorder {
 
   private currentExcerpt: IExcerptMessage | undefined;
 
-  private disposable: Monaco.IDisposable | undefined;
+  private disposable: IDisposable | undefined;
 
   // hook
   onFrame: IRecorder["onFrame"];
 
-  constructor(private editor: Monaco.Editor) {}
+  constructor(private editor: editor.IStandaloneCodeEditor) {}
 
   start(
     initialExcerpt = {
@@ -100,7 +101,7 @@ export class Recorder implements IRecorder {
   private onModelContentChange = ({
     versionId,
     changes,
-  }: Monaco.IModelContentChangedEvent): void => {
+  }: editor.IModelContentChangedEvent): void => {
     this.pendingOperationDict[versionId] = changes.map(
       ({ range, text, forceMoveMarkers }: any): IOperation => ({
         range,

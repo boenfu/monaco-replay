@@ -1,3 +1,5 @@
+import { editor } from "monaco-editor";
+
 import { readRecordFile } from "./utils";
 import {
   ExcerptMessage,
@@ -8,6 +10,7 @@ import {
 import { PlayerController, PlayerControllerOptions } from "./controller";
 import { CustomEventTarget } from "./core";
 import { PlayerCache } from "./cache";
+import { MonacoEditor } from "./main";
 
 export type PlayerEventType = PlayerEvent["type"];
 
@@ -74,7 +77,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
   private controller: PlayerController | undefined;
 
   private cache: PlayerCache | undefined;
-  private cacheModel!: Monaco.Model;
+  private cacheModel!: editor.IModel;
 
   private _playing = false;
 
@@ -155,8 +158,8 @@ export class Player extends CustomEventTarget<PlayerEventType>
   }
 
   constructor(
-    private monaco: Monaco.Monaco,
-    private editor: Monaco.Editor,
+    private editor: MonacoEditor,
+    private codeEditor: editor.IStandaloneCodeEditor,
     private options?: PlayerOptions
   ) {
     super();
@@ -169,8 +172,16 @@ export class Player extends CustomEventTarget<PlayerEventType>
     this.currentTime = 0;
 
     if (this.currentExcerpt) {
-      this.editor.setValue(this.currentExcerpt?.value);
+      this.codeEditor.setValue(this.currentExcerpt?.value);
     }
+  }
+
+  load(excerpt?: ExcerptMessage | Uint8Array): void {
+    if (this.playing) {
+      this.pause();
+    }
+
+    this.beforePlay(excerpt);
   }
 
   play(excerpt?: ExcerptMessage | Uint8Array): void {
@@ -202,21 +213,36 @@ export class Player extends CustomEventTarget<PlayerEventType>
   };
 
   showController(): void {
-    let container = this.editor.getContainerDomNode();
+    let container = this.codeEditor.getContainerDomNode();
 
     if (!container || PlayerController.isExisted(container)) {
       return;
     }
 
-    if (getComputedStyle(container).position === "static") {
-      container.style.position = "relative";
+    let controller = this.controller;
+
+    if (!controller) {
+      if (getComputedStyle(container).position === "static") {
+        container.style.position = "relative";
+      }
+
+      controller = new PlayerController(this, this.options);
+
+      this.controller = controller;
     }
 
-    let controller = new PlayerController(this, this.options);
-
     container.appendChild(controller.dom);
+  }
 
-    this.controller = controller;
+  hideController(): void {
+    let container = this.codeEditor.getContainerDomNode();
+    let controller = this.controller;
+
+    if (!PlayerController.isExisted(container) || !controller) {
+      return;
+    }
+
+    container.removeChild(controller.dom);
   }
 
   private initialize(): void {
@@ -226,7 +252,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
     }
 
     // cache
-    this.cacheModel = this.monaco.editor.createModel("", undefined, "mrp");
+    this.cacheModel = this.editor.createModel("", undefined, "mrp");
   }
 
   private handleTimeupdate(newCurrentTime: number): void {
@@ -250,11 +276,11 @@ export class Player extends CustomEventTarget<PlayerEventType>
 
     this._cursor = newCursor;
 
-    this.editor.setValue(newValue);
+    this.codeEditor.setValue(newValue);
   }
 
   private beforePlay(excerpt: ExcerptMessage | Uint8Array | undefined): void {
-    let editor = this.editor;
+    let editor = this.codeEditor;
 
     if (excerpt) {
       if (excerpt instanceof Uint8Array) {
@@ -326,14 +352,14 @@ export class Player extends CustomEventTarget<PlayerEventType>
     let { operation, viewState, value } = new FrameMessage(frame).toFrame();
 
     if (operation.length) {
-      let model = this.editor.getModel();
+      let model = this.codeEditor.getModel();
 
       if (!model) {
         return;
       }
 
       if (value) {
-        this.editor.setValue(value);
+        this.codeEditor.setValue(value);
       }
 
       for (let item of Array.from(operation)) {
@@ -341,7 +367,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
       }
     }
 
-    this.editor.restoreViewState(viewState);
+    this.codeEditor.restoreViewState(viewState);
   }
 }
 

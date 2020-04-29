@@ -1,4 +1,5 @@
 import FileSaver from "file-saver";
+
 import { ExcerptMessage, IExcerptMessage } from "../protobuf";
 
 function buildExcerptMessage(excerpt: IExcerptMessage): Blob {

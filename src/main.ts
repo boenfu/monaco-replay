@@ -1,5 +1,15 @@
+import { editor } from "monaco-editor";
+
 import { Recorder } from "./recorder";
 import { Player, PlayerOptions } from "./player";
+
+export interface MonacoEditor {
+  createModel(
+    value: string,
+    language?: string,
+    uri?: string
+  ): editor.ITextModel;
+}
 
 export interface MonacoReplayOptions extends PlayerOptions {}
 
@@ -8,11 +18,11 @@ export class MonacoReplay {
   player: Player;
 
   constructor(
-    public monaco: Monaco.Monaco,
-    public editor: Monaco.Editor,
+    public editor: MonacoEditor,
+    public codeEditor: editor.IStandaloneCodeEditor,
     private options?: MonacoReplayOptions
   ) {
-    this.recorder = new Recorder(editor);
-    this.player = new Player(monaco, editor, this.options);
+    this.recorder = new Recorder(codeEditor);
+    this.player = new Player(editor, codeEditor, this.options);
   }
 }

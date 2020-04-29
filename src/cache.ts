@@ -1,4 +1,5 @@
 import { IExcerptMessage, FrameMessage, IFrameMessage } from "./protobuf";
+import { editor } from "monaco-editor";
 
 export const DEFAULT_CACHE_SIZE = 100;
 
@@ -8,7 +9,7 @@ export class PlayerCache {
   private cachedValues: string[] = [];
 
   constructor(
-    private cacheModel: Monaco.Model,
+    private cacheModel: editor.ITextModel,
     private excerpt: IExcerptMessage,
     private cacheSize = DEFAULT_CACHE_SIZE
   ) {
@@ -87,7 +88,7 @@ export class PlayerCache {
   }
 }
 
-function applyFrame(model: Monaco.Model, frame: IFrameMessage): void {
+function applyFrame(model: editor.ITextModel, frame: IFrameMessage): void {
   let { operation } = new FrameMessage(frame).toFrame();
 
   if (operation.length) {

@@ -1,5 +1,5 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.main.js";
-import { MonacoReplay } from "../lib/main";
+import { MonacoReplay } from "../esm/main";
 
 self.MonacoEnvironment = {
   getWorkerUrl: function (_, label) {

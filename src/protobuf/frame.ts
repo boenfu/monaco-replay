@@ -1,10 +1,19 @@
 import { Message, Field } from "protobufjs/light";
+import { editor, IRange } from "monaco-editor";
+
 import { CodeEditorViewStateMessage } from "./editor-view-state";
 import { RangeMessage } from "./range";
 import { Range } from "../core";
 
+export interface Frame {
+  operation: editor.IIdentifiedSingleEditOperation[];
+  viewState: editor.ICodeEditorViewState;
+  timestamp: number;
+  value?: string;
+}
+
 export interface IOperation {
-  range: Monaco.IRange;
+  range: IRange;
   text: string | null;
   forceMoveMarkers?: boolean;
 }
@@ -12,7 +21,7 @@ export interface IOperation {
 export class OperationMessage extends Message<IOperation>
   implements IOperation {
   @Field.d(1, RangeMessage)
-  range!: Monaco.IRange;
+  range!: IRange;
 
   @Field.d(2, "string", "optional")
   text!: string | null;
@@ -27,7 +36,7 @@ export class OperationMessage extends Message<IOperation>
 
 export interface IFrameMessage {
   operation: IOperation[];
-  viewState: Monaco.ICodeEditorViewState;
+  viewState: editor.ICodeEditorViewState;
   timestamp?: number;
   /**
    * in first frame
@@ -41,7 +50,7 @@ export class FrameMessage extends Message<IFrameMessage>
   operation!: IOperation[];
 
   @Field.d(2, CodeEditorViewStateMessage)
-  viewState!: Monaco.ICodeEditorViewState;
+  viewState!: editor.ICodeEditorViewState;
 
   @Field.d(3, "int32")
   timestamp!: number;
@@ -60,7 +69,7 @@ export class FrameMessage extends Message<IFrameMessage>
         range: { startColumn, startLineNumber, endColumn, endLineNumber },
         text,
         forceMoveMarkers,
-      }): Monaco.IIdentifiedSingleEditOperation => ({
+      }): editor.IIdentifiedSingleEditOperation => ({
         text,
         range: new Range(
           startLineNumber,

@@ -1,4 +1,5 @@
 import { Message, Field } from "protobufjs/light";
+
 import { IFrameMessage, FrameMessage } from "./frame";
 
 export interface IExcerptMessage {
