@@ -25,7 +25,7 @@ let editor = monaco.editor.create(document.getElementById("container"), {
   theme: "vs-dark",
 });
 
-window.rp = new MonacoReplay(monaco, editor, {
+window.rp = new MonacoReplay(monaco.editor, editor, {
   showController: true,
   showFileButton: true,
 });

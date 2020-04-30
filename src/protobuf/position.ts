@@ -1,5 +1,5 @@
-import { Message, Field } from "protobufjs/light";
 import { IPosition } from "monaco-editor";
+import { Message, Field } from "protobufjs/light";
 
 export class PositionMessage extends Message<IPosition> implements IPosition {
   @Field.d(1, "int32")

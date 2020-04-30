@@ -323,7 +323,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
 
     let now = Date.now();
 
-    if (pendingFrame.timestamp! <= this._currentTime) {
+    if (pendingFrame.timestamp <= this._currentTime) {
       this.applyFrame(pendingFrame);
       this._cursor += 1;
     }
@@ -358,7 +358,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
         return;
       }
 
-      if (value) {
+      if (value !== undefined) {
         this.codeEditor.setValue(value);
       }
 

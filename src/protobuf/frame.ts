@@ -1,5 +1,5 @@
-import { Message, Field } from "protobufjs/light";
 import { editor, IRange } from "monaco-editor";
+import { Message, Field } from "protobufjs/light";
 
 import { CodeEditorViewStateMessage } from "./editor-view-state";
 import { RangeMessage } from "./range";
@@ -37,7 +37,7 @@ export class OperationMessage extends Message<IOperation>
 export interface IFrameMessage {
   operation: IOperation[];
   viewState: editor.ICodeEditorViewState;
-  timestamp?: number;
+  timestamp: number;
   /**
    * in first frame
    */

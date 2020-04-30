@@ -1,5 +1,5 @@
-import { Message, Field } from "protobufjs/light";
 import { IRange } from "monaco-editor";
+import { Message, Field } from "protobufjs/light";
 
 export class RangeMessage extends Message<IRange> implements IRange {
   @Field.d(1, "int32")

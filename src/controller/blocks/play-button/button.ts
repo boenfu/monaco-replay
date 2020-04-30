@@ -1,4 +1,5 @@
 import "./iconfont";
+
 import { injectMRStyle, mergeElementStyle } from "../../utils";
 import { Player, PlayerStatusEvent } from "../../../player";
 

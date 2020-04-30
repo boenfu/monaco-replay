@@ -1,7 +1,7 @@
-import { injectMRStyle } from "./utils";
 import { Progress, Speed, FileButton, Timer, PlayButton } from "./blocks";
 import { Player } from "../player";
 import { PRIMARY_COLOR } from "./theme";
+import { injectMRStyle } from "./utils";
 
 const PLAYER_CONTROLLER_CLASS_NAME = "mrp_container";
 

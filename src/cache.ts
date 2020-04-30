@@ -1,5 +1,6 @@
-import { IExcerptMessage, FrameMessage, IFrameMessage } from "./protobuf";
 import { editor } from "monaco-editor";
+
+import { IExcerptMessage, FrameMessage, IFrameMessage } from "./protobuf";
 
 export const DEFAULT_CACHE_SIZE = 100;
 

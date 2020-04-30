@@ -1,5 +1,5 @@
-import { Message, Field } from "protobufjs/light";
 import { editor, IPosition } from "monaco-editor";
+import { Message, Field } from "protobufjs/light";
 
 import { PositionMessage } from "./position";
 

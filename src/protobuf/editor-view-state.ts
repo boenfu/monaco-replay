@@ -1,5 +1,5 @@
-import { Message, Field } from "protobufjs/light";
 import { editor } from "monaco-editor";
+import { Message, Field } from "protobufjs/light";
 
 import { CursorStateMessage } from "./cursor-state";
 import { ViewStateMessage } from "./view-state";

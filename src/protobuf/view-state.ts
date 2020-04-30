@@ -1,6 +1,7 @@
-import { Message, Field } from "protobufjs/light";
-import { PositionMessage } from "./position";
 import { editor, IPosition } from "monaco-editor";
+import { Message, Field } from "protobufjs/light";
+
+import { PositionMessage } from "./position";
 
 export class ViewStateMessage extends Message<editor.IViewState>
   implements editor.IViewState {
