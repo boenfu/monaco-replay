@@ -4,6 +4,7 @@ import { Recorder } from "./recorder";
 import { Player, PlayerOptions } from "./player";
 
 export interface MonacoEditor {
+  getModel(uri?: string): editor.ITextModel | null;
   createModel(
     value: string,
     language?: string,

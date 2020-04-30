@@ -252,7 +252,18 @@ export class Player extends CustomEventTarget<PlayerEventType>
     }
 
     // cache
-    this.cacheModel = this.editor.createModel("", undefined, "mrp");
+    this.cacheModel = this.getOrCreateCacheModel();
+  }
+
+  private getOrCreateCacheModel(): editor.ITextModel {
+    let model = this.editor.getModel("mrp_cache");
+
+    if (model) {
+      model.setValue("");
+      return model;
+    }
+
+    return this.editor.createModel("", undefined, "mrp_cache");
   }
 
   private handleTimeupdate(newCurrentTime: number): void {
