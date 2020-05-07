@@ -4,7 +4,7 @@
 
 !(function (l) {
   // return if l is not window
-  if (!"localStorage" in l) {
+  if (!("localStorage" in l)) {
     return;
   }
 
