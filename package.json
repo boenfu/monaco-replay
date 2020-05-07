@@ -1,6 +1,6 @@
 {
   "name": "monaco-replay",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Replay your code actions",
   "repository": "git@github.com:boenfu/monaco-replay.git",
   "author": "boenfu <1997@boenfu.cn>",
