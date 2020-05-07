@@ -16,16 +16,16 @@ export class PositionMessage extends Message<IPosition> implements IPosition {
 }
 
 export class RangeMessage extends Message<IRange> implements IRange {
-  @Field.d(1, "int32")
+  @Field.d(3, "int32")
   startLineNumber!: number;
 
-  @Field.d(2, "int32")
+  @Field.d(4, "int32")
   startColumn!: number;
 
-  @Field.d(3, "int32")
+  @Field.d(5, "int32")
   endLineNumber!: number;
 
-  @Field.d(4, "int32")
+  @Field.d(6, "int32")
   endColumn!: number;
 
   constructor(range: IRange) {
@@ -35,19 +35,19 @@ export class RangeMessage extends Message<IRange> implements IRange {
 
 export class ViewStateMessage extends Message<editor.IViewState>
   implements editor.IViewState {
-  @Field.d(1, "int32", "optional")
+  @Field.d(7, "int32", "optional")
   scrollTop?: number | undefined;
 
-  @Field.d(2, "int32", "optional")
+  @Field.d(8, "int32", "optional")
   scrollTopWithoutViewZones?: number | undefined;
 
-  @Field.d(3, "int32")
+  @Field.d(9, "int32")
   scrollLeft!: number;
 
-  @Field.d(4, PositionMessage)
+  @Field.d(10, PositionMessage)
   firstPosition!: IPosition;
 
-  @Field.d(5, "int32")
+  @Field.d(11, "int32")
   firstPositionDeltaTop!: number;
 
   constructor(viewState: editor.IViewState) {
@@ -57,13 +57,13 @@ export class ViewStateMessage extends Message<editor.IViewState>
 
 export class CursorStateMessage extends Message<editor.ICursorState>
   implements editor.ICursorState {
-  @Field.d(1, "bool")
+  @Field.d(12, "bool")
   inSelectionMode!: boolean;
 
-  @Field.d(2, PositionMessage)
+  @Field.d(13, PositionMessage)
   selectionStart!: IPosition;
 
-  @Field.d(3, PositionMessage)
+  @Field.d(14, PositionMessage)
   position!: IPosition;
 
   constructor(cursorState: editor.ICursorState) {
@@ -76,10 +76,10 @@ type ContributionsState = { [id: string]: any };
 export class CodeEditorViewStateMessage
   extends Message<editor.ICodeEditorViewState>
   implements editor.ICodeEditorViewState {
-  @Field.d(1, CursorStateMessage, "repeated")
+  @Field.d(15, CursorStateMessage, "repeated")
   cursorState!: editor.ICursorState[];
 
-  @Field.d(2, ViewStateMessage)
+  @Field.d(16, ViewStateMessage)
   viewState!: editor.IViewState;
 
   contributionsState!: ContributionsState;
@@ -104,13 +104,13 @@ export interface IOperation {
 
 export class OperationMessage extends Message<IOperation>
   implements IOperation {
-  @Field.d(1, RangeMessage)
+  @Field.d(17, RangeMessage)
   range!: IRange;
 
-  @Field.d(2, "string", "optional")
+  @Field.d(18, "string", "optional")
   text!: string | null;
 
-  @Field.d(3, "bool", "optional")
+  @Field.d(19, "bool", "optional")
   forceMoveMarkers?: boolean | undefined;
 
   constructor(operation: IOperation) {
@@ -130,16 +130,16 @@ export interface IFrameMessage {
 
 export class FrameMessage extends Message<IFrameMessage>
   implements IFrameMessage {
-  @Field.d(1, OperationMessage, "repeated")
+  @Field.d(20, OperationMessage, "repeated")
   operation!: IOperation[];
 
-  @Field.d(2, CodeEditorViewStateMessage)
+  @Field.d(21, CodeEditorViewStateMessage)
   viewState!: editor.ICodeEditorViewState;
 
-  @Field.d(3, "int32")
+  @Field.d(22, "int32")
   timestamp!: number;
 
-  @Field.d(4, "string", "optional")
+  @Field.d(23, "string", "optional")
   value?: string | undefined;
 
   constructor(frame: IFrameMessage) {
@@ -183,13 +183,13 @@ export interface IExcerptMessage {
 
 export class ExcerptMessage extends Message<IExcerptMessage>
   implements IExcerptMessage {
-  @Field.d(1, "string", "required")
+  @Field.d(24, "string", "required")
   value!: string;
 
-  @Field.d(2, FrameMessage, "repeated")
+  @Field.d(25, FrameMessage, "repeated")
   frames!: IFrameMessage[];
 
-  @Field.d(3, "int32", "required")
+  @Field.d(26, "int32", "required")
   timestamp!: number;
 
   constructor(excerpt: IExcerptMessage) {
