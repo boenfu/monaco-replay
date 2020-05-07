@@ -6,9 +6,9 @@
   "author": "boenfu <1997@boenfu.cn>",
   "license": "MIT",
   "private": false,
-  "main": "cjs/main.js",
-  "module": "esm/main.js",
-  "types": "esm/main.d.ts",
+  "main": "cjs/index.js",
+  "module": "esm/index.js",
+  "types": "esm/index.d.ts",
   "files": [
     "esm",
     "cjs"
