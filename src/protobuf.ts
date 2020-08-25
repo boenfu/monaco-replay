@@ -182,9 +182,38 @@ export class FrameMessage extends Message<IFrameMessage>
   }
 }
 
+/**
+ * Custom Event
+ */
+export interface ICustomEventMessage {
+  name: string;
+  timestamp: number;
+  /**
+   * JSON string
+   */
+  payload?: string;
+}
+
+@Type.d("CustomEventMessage")
+export class CustomEventMessage extends Message<ICustomEventMessage> {
+  @Field.d(0, "string")
+  name!: string;
+
+  @Field.d(1, "int32")
+  timestamp!: number;
+
+  @Field.d(2, "string", "optional")
+  payload!: string | null;
+
+  constructor(eventMessage: ICustomEventMessage) {
+    super(eventMessage);
+  }
+}
+
 export interface IExcerptMessage {
   value: string;
   frames: IFrameMessage[];
+  events: ICustomEventMessage[];
   timestamp: number;
 }
 
@@ -199,6 +228,9 @@ export class ExcerptMessage extends Message<IExcerptMessage>
 
   @Field.d(2, "int32", "required")
   timestamp!: number;
+
+  @Field.d(3, CustomEventMessage, "repeated")
+  events!: ICustomEventMessage[];
 
   constructor(excerpt: IExcerptMessage) {
     super(excerpt);

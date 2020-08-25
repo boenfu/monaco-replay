@@ -15,6 +15,7 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
+    "downlevelIteration": true,
     "lib": ["DOM", "ESNext"]
   },
   "include": ["src"]

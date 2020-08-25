@@ -9,7 +9,7 @@ import {
 } from "./protobuf";
 import { PlayerController, PlayerControllerOptions } from "./controller";
 import { CustomEventTarget } from "./core";
-import { PlayerCache } from "./cache";
+import { PlayerCache, PlayerCustomEventData } from "./cache";
 import { MonacoEditor } from "./main";
 
 export type PlayerEventType = PlayerEvent["type"];
@@ -23,6 +23,7 @@ export type PlayerEvent =
   | PlayerTimeupdateEvent
   | PlayerStatusEvent
   | PlayerSpeedEvent
+  | PlayerCustomEvent
   | PlayerErrorEvent;
 
 export interface IPlayerEvent<TType, TData> {
@@ -35,6 +36,8 @@ export type PlayerTimeupdateEvent = IPlayerEvent<"timeupdate", undefined>;
 export type PlayerStatusEvent = IPlayerEvent<"status", { playing: boolean }>;
 
 export type PlayerSpeedEvent = IPlayerEvent<"speed", { speed: number }>;
+
+export type PlayerCustomEvent = IPlayerEvent<"custom", PlayerCustomEventData>;
 
 export type PlayerErrorEvent = IPlayerEvent<"error", { error: Error }>;
 
@@ -267,6 +270,10 @@ export class Player extends CustomEventTarget<PlayerEventType>
   }
 
   private handleTimeupdate(newCurrentTime: number): void {
+    for (let event of this.cache?.getEvents(newCurrentTime) ?? []) {
+      this.dispatchEvent(createEvent("custom", event));
+    }
+
     // TODO (boen): 🔍查找 index 可以换成二分
     let newCursor = Math.max(
       (this.currentExcerpt?.frames.findIndex(

@@ -1,13 +1,24 @@
 import { editor } from "monaco-editor";
 
-import { IExcerptMessage, FrameMessage, IFrameMessage } from "./protobuf";
+import {
+  IExcerptMessage,
+  FrameMessage,
+  IFrameMessage,
+  ICustomEventMessage,
+} from "./protobuf";
 
 export const DEFAULT_CACHE_SIZE = 100;
+
+export interface PlayerCustomEventData extends ICustomEventMessage {
+  events: ICustomEventMessage[];
+}
 
 export class PlayerCache {
   ready = false;
 
   private cachedValues: string[] = [];
+
+  private categoryToEventsMap = new Map<string, ICustomEventMessage[]>();
 
   constructor(
     private cacheModel: editor.ITextModel,
@@ -15,6 +26,7 @@ export class PlayerCache {
     private cacheSize = DEFAULT_CACHE_SIZE
   ) {
     this.initialize();
+    this.initializeEvents();
   }
 
   private initialize = (() => {
@@ -38,6 +50,18 @@ export class PlayerCache {
 
     return next;
   })();
+
+  private initializeEvents(): void {
+    let map = new Map();
+
+    for (let event of this.excerpt.events) {
+      let arr = map.get(event.name) ?? [];
+      arr.push(event);
+      map.set(event.name, arr);
+    }
+
+    this.categoryToEventsMap = map;
+  }
 
   private *build() {
     let excerpt = this.excerpt;
@@ -87,6 +111,12 @@ export class PlayerCache {
 
     return cacheModel.getValue();
   }
+
+  getEvents(timestamp: number): PlayerCustomEventData[] {
+    return [...this.categoryToEventsMap.values()]
+      .map((events) => getPreviousEvent(timestamp, events))
+      .filter((event): event is PlayerCustomEventData => !!event);
+  }
 }
 
 function applyFrame(model: editor.ITextModel, frame: IFrameMessage): void {
@@ -97,4 +127,25 @@ function applyFrame(model: editor.ITextModel, frame: IFrameMessage): void {
       model.pushEditOperations([], [item], () => null);
     }
   }
+}
+
+function getPreviousEvent(
+  timestamp: number,
+  events: ICustomEventMessage[]
+): PlayerCustomEventData | undefined {
+  // TODO:
+  let index = events.findIndex((event) => event.timestamp > timestamp);
+
+  if (index === -1) {
+    return undefined;
+  }
+
+  if(index === 0) {
+    index = 1
+  }
+
+  return {
+    ...events[index - 1],
+    events: events.slice(0, index),
+  };
 }

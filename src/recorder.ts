@@ -37,6 +37,7 @@ export class Recorder implements IRecorder {
   start(
     initialExcerpt = {
       timestamp: Date.now(),
+      events: []
     }
   ): void {
     this.disposable = this.editor.onDidChangeModelContent(
@@ -90,6 +91,19 @@ export class Recorder implements IRecorder {
     }
 
     saveExcerptMessageToFile(excerpt, name);
+  }
+
+  addEvent(name: string, payload: string):void {
+    if(!this.currentExcerpt) {
+      console.info('Not found recording excerpt');
+      return
+    }
+
+    this.currentExcerpt.events.push({
+      name,
+      payload,
+      timestamp: Date.now()
+    })
   }
 
   private record = (): void => {
