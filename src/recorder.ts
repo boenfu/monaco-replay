@@ -6,6 +6,7 @@ import {
   IExcerptMessage,
   CodeEditorViewStateMessage,
   IFrameMessage,
+  ICustomEventMessage,
 } from "./protobuf";
 import { saveExcerptMessageToFile, getExcerptMessageFormData } from "./utils";
 
@@ -25,6 +26,8 @@ export class Recorder implements IRecorder {
     [key in string]: IOperation[];
   } = {};
 
+  private pendingCollectEvents: ICustomEventMessage[] = [];
+
   private currentExcerpt: IExcerptMessage | undefined;
 
   private disposable: IDisposable | undefined;
@@ -37,7 +40,6 @@ export class Recorder implements IRecorder {
   start(
     initialExcerpt = {
       timestamp: Date.now(),
-      events: []
     }
   ): void {
     this.disposable = this.editor.onDidChangeModelContent(
@@ -93,17 +95,12 @@ export class Recorder implements IRecorder {
     saveExcerptMessageToFile(excerpt, name);
   }
 
-  addEvent(name: string, payload: string):void {
-    if(!this.currentExcerpt) {
-      console.info('Not found recording excerpt');
-      return
-    }
-
-    this.currentExcerpt.events.push({
+  addEvent(name: string, payload: string): void {
+    this.pendingCollectEvents.push({
       name,
       payload,
-      timestamp: Date.now()
-    })
+      timestamp: this.getTimestamp(),
+    });
   }
 
   private record = (): void => {
@@ -134,27 +131,33 @@ export class Recorder implements IRecorder {
 
     let operation = Object.values(this.pendingOperationDict).flat();
     let viewState = this.editor.saveViewState()!;
-    let timestamp = Date.now() - currentExcerpt.timestamp;
+    let timestamp = this.getTimestamp();
 
     let viewStateBytes = CodeEditorViewStateMessage.encode(viewState).finish();
 
     let lastViewStateBytes = this.lastViewStateBytes;
+    let events = this.pendingCollectEvents;
 
     if (
       !operation.length &&
       lastViewStateBytes?.length &&
-      viewStateBytes.every((byte, index) => lastViewStateBytes![index] === byte)
+      viewStateBytes.every(
+        (byte, index) => lastViewStateBytes![index] === byte
+      ) &&
+      !events.length
     ) {
       return;
     }
 
     this.lastViewStateBytes = viewStateBytes;
     this.pendingOperationDict = {};
+    this.pendingCollectEvents = [];
 
     let frame: IFrameMessage = {
       operation,
       viewState,
       timestamp,
+      events,
     };
 
     if (!currentExcerpt.frames.length) {
@@ -164,5 +167,13 @@ export class Recorder implements IRecorder {
     currentExcerpt.frames.push(frame);
 
     this.onFrame?.(frame);
+  }
+
+  private getTimestamp(): number {
+    if (!this.currentExcerpt) {
+      return 0;
+    }
+
+    return Date.now() - this.currentExcerpt.timestamp;
   }
 }

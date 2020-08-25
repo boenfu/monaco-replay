@@ -26,10 +26,10 @@ export class PlayerCache {
     private cacheSize = DEFAULT_CACHE_SIZE
   ) {
     this.initialize();
-    this.initializeEvents();
   }
 
   private initialize = (() => {
+    this.categoryToEventsMap = new Map();
     let generator = this.build();
 
     const next = () => {
@@ -51,23 +51,13 @@ export class PlayerCache {
     return next;
   })();
 
-  private initializeEvents(): void {
-    let map = new Map();
-
-    for (let event of this.excerpt.events) {
-      let arr = map.get(event.name) ?? [];
-      arr.push(event);
-      map.set(event.name, arr);
-    }
-
-    this.categoryToEventsMap = map;
-  }
-
   private *build() {
     let excerpt = this.excerpt;
     let cacheModel = this.cacheModel;
     let cacheSize = this.cacheSize;
     let cachedValues = this.cachedValues;
+
+    let categoryToEventsMap = this.categoryToEventsMap;
 
     let count = 0;
 
@@ -78,6 +68,16 @@ export class PlayerCache {
 
     for (let frame of excerpt.frames) {
       count += 1;
+
+      // collect events
+      if(frame.events.length) {
+        for (let event of frame.events) {
+          let arr = categoryToEventsMap.get(event.name) ?? [];
+          arr.push(event);
+          
+          categoryToEventsMap.set(event.name, arr);
+        }
+      }
 
       yield applyFrame(cacheModel, frame);
 
@@ -140,8 +140,8 @@ function getPreviousEvent(
     return undefined;
   }
 
-  if(index === 0) {
-    index = 1
+  if (index === 0) {
+    index = 1;
   }
 
   return {
