@@ -178,7 +178,7 @@ export class FrameMessage extends Message<IFrameMessage>
   @Field.d(3, "string", "optional")
   value?: string | undefined;
 
-  @Field.d(3, CustomEventMessage, "repeated")
+  @Field.d(4, CustomEventMessage, "repeated")
   events!: ICustomEventMessage[];
 
   constructor(frame: IFrameMessage) {
