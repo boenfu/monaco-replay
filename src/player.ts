@@ -215,6 +215,10 @@ export class Player extends CustomEventTarget<PlayerEventType>
     this.play(bytes);
   };
 
+  registerController(dom: HTMLElement):void {
+    dom.appendChild(new PlayerController(this, this.options).dom);
+  }
+
   showController(): void {
     let container = this.codeEditor.getContainerDomNode();
 
