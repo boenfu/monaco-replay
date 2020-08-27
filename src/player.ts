@@ -72,7 +72,8 @@ export interface PlayerOptions extends PlayerControllerOptions {
   showController?: boolean;
 }
 
-export class Player extends CustomEventTarget<PlayerEventType>
+export class Player
+  extends CustomEventTarget<PlayerEventType>
   implements IPlayer {
   private currentExcerpt: IExcerptMessage | undefined;
   private requestAnimationFrameId: number | undefined;
@@ -215,7 +216,7 @@ export class Player extends CustomEventTarget<PlayerEventType>
     this.play(bytes);
   };
 
-  registerController(dom: HTMLElement):void {
+  registerController(dom: HTMLElement): void {
     dom.appendChild(new PlayerController(this, this.options).dom);
   }
 
@@ -260,6 +261,9 @@ export class Player extends CustomEventTarget<PlayerEventType>
 
     // cache
     this.cacheModel = this.getOrCreateCacheModel();
+
+    // timeupdate handler
+    this.addEventListener("timeupdate", this._timeupdateHandler);
   }
 
   private getOrCreateCacheModel(): editor.ITextModel {
@@ -274,10 +278,6 @@ export class Player extends CustomEventTarget<PlayerEventType>
   }
 
   private handleTimeupdate(newCurrentTime: number): void {
-    for (let event of this.cache?.getEvents(newCurrentTime) ?? []) {
-      this.dispatchEvent(createEvent("custom", event));
-    }
-
     // TODO (boen): 🔍查找 index 可以换成二分
     let newCursor = Math.max(
       (this.currentExcerpt?.frames.findIndex(
@@ -391,6 +391,12 @@ export class Player extends CustomEventTarget<PlayerEventType>
 
     this.codeEditor.restoreViewState(viewState);
   }
+
+  private _timeupdateHandler = (): void => {
+    for (let event of this.cache?.getEvents(this._currentTime) ?? []) {
+      this.dispatchEvent(createEvent("custom", event));
+    }
+  };
 }
 
 function createEvent<TType extends PlayerEventType>(
