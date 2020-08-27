@@ -18,6 +18,8 @@ export class PlayerCache {
 
   private cachedValues: string[] = [];
 
+  private emittedEventCursorMap = new Map<string, number>();
+
   private categoryToEventsMap = new Map<string, ICustomEventMessage[]>();
 
   constructor(
@@ -70,11 +72,11 @@ export class PlayerCache {
       count += 1;
 
       // collect events
-      if(frame.events.length) {
+      if (frame.events.length) {
         for (let event of frame.events) {
           let arr = categoryToEventsMap.get(event.name) ?? [];
           arr.push(event);
-          
+
           categoryToEventsMap.set(event.name, arr);
         }
       }
@@ -114,7 +116,19 @@ export class PlayerCache {
 
   getEvents(timestamp: number): PlayerCustomEventData[] {
     return [...this.categoryToEventsMap.values()]
-      .map((events) => getPreviousEvent(timestamp, events))
+      .map((events) => {
+        let event = getPreviousEvent(timestamp, events);
+
+        if (
+          this.emittedEventCursorMap.get(event.name) === event.events.length
+        ) {
+          return undefined;
+        } else {
+          this.emittedEventCursorMap.set(event.name, event.events.length);
+        }
+
+        return event;
+      })
       .filter((event): event is PlayerCustomEventData => !!event);
   }
 }
@@ -132,12 +146,12 @@ function applyFrame(model: editor.ITextModel, frame: IFrameMessage): void {
 function getPreviousEvent(
   timestamp: number,
   events: ICustomEventMessage[]
-): PlayerCustomEventData | undefined {
+): PlayerCustomEventData {
   // TODO:
   let index = events.findIndex((event) => event.timestamp > timestamp);
 
   if (index === -1) {
-    return undefined;
+    index = events.length;
   }
 
   if (index === 0) {
